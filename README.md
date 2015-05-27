@@ -1,2 +1,8 @@
 # Kinect2Kit
-Toolkit for multiple Kinects
+A toolkit for managing multiple Kinects to resolve the occlusion problem.
+
+## Help
+
+## Run
+
+## Issues
