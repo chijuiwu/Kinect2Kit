@@ -1,6 +1,7 @@
 
 import toolkit
 import argparse
+import numpy
 
 def main():
     parser = argparse.ArgumentParser(
@@ -22,4 +23,6 @@ def main():
     toolkit.server.run(args.host, args.port)
 
 if __name__ == "__main__":
+    # recompute testing
+    numpy.arange(15)
     main()

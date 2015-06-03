@@ -4,6 +4,7 @@ from flask import request, jsonify
 import json
 import session
 import kinect
+import numpy
 from exceptions import InvalidClientException
 
 @kinect2kit_server.route("/new", methods=["POST"])
@@ -11,6 +12,10 @@ def new():
     """
     Creates a new viewing session
     """
+
+    # testing(recompute)
+    numpy.arange(15)
+
     try:
         name = request.form["name"]
         addr = request.remote_addr
