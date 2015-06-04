@@ -1,21 +1,15 @@
 
-from config import kinect2kit_server, current_session, kinects, tracker
-from flask import request, jsonify
 import json
-import session
-import kinect
-import numpy
-from exceptions import InvalidClientException
+from flask import request, jsonify
+from .config import kinect2kit_server, current_session, tracker
+from .exceptions import InvalidClientException
+from . import session
 
 @kinect2kit_server.route("/new", methods=["POST"])
 def new():
     """
     Creates a new viewing session
     """
-
-    # testing(recompute)
-    numpy.arange(15)
-
     try:
         name = request.form["name"]
         addr = request.remote_addr

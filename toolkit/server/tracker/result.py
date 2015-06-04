@@ -6,3 +6,6 @@ class Result(object):
 
 def create(*args):
     return Result(*args)
+
+def empty():
+    return None

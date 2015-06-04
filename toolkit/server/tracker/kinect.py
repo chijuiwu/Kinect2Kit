@@ -1,3 +1,4 @@
+
 class Kinect(object):
     def __init__(self, name, addr, tilt_angle, height, depth_frame_width, depth_frame_height):
         self.name = name

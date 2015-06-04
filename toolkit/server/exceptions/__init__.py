@@ -1,4 +1,4 @@
 
 __all__ = ["InvalidClientException"]
 
-import InvalidClientException
+from . import InvalidClientException

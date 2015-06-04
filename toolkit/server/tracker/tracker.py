@@ -1,8 +1,8 @@
 
-from config import kinects, tracking_result
-from worldview import WorldViewCoordinateSystem as WorldViewCS
-import skeleton
-import result
+from .worldview import WorldViewCoordinateSystem as WorldViewCS
+from . import skeleton
+from . import result
+from . import kinect
 
 class Tracker(object):
 
@@ -29,18 +29,25 @@ class Tracker(object):
             if not kinect.get_uncalibrated_frames_count() >= self.calibration_frames:
                 sufficient_frames = False
                 if not sufficient_frames:
-                    return
+                    return False
         if sufficient_frames:
-            global tracking_result
-            tracking_result = result.create()
             for _, kinect in kinects.iteritems():
                 self.__calibrate_kinect(kinect)
+            return True
+
+    def __detect_people(self):
+        global tracking_result
+        tracking_result = result.create()
+        return tracking_result
 
     def track(self):
         if not self.calibrated:
             self.__try_calibrate()
+        global tracking_result
+        if self.calibrated:
+            return self.__detect_people()
         else:
-            pass
+            return result.empty()
 
 def create(*args):
     return Tracker(*args)

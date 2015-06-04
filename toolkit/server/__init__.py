@@ -1,16 +1,12 @@
-__all__ = ["config", "pageserver", "restful", "session", "kinect", "tracker", "exceptions", "skeleton", "worldview",
-           "result"]
 
-from config import kinect2kit_server
-import pageserver
-import restful
-import session
-import kinect
-import tracker
-import exceptions
-import skeleton
-import worldview
-import result
+__all__ = ["config", "pageserver", "restful", "session", "tracker", "exceptions"]
+
+from .config import kinect2kit_server
+from . import pageserver
+from . import restful
+from . import session
+from . import tracker
+from . import exceptions
 
 def run(host, port):
     """
@@ -20,4 +16,4 @@ def run(host, port):
     @:param port Port of the server
     """
 
-    kinect2kit_server.run(host=host, port=port, debug=True, use_reloader=False)
+    kinect2kit_server.run(host=host, port=port, debug=True)
