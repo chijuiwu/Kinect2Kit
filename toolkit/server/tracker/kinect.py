@@ -35,9 +35,5 @@ class Kinect(object):
         else:
             self.body_frames.append(body_frame)
 
-    def disconnect(self):
-        pass
-
-
 def create(*args):
     return Kinect(*args)

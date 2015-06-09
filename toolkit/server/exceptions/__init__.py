@@ -1,4 +1,2 @@
 
-__all__ = ["InvalidClientException"]
-
-from . import InvalidClientException
+__all__ = []
