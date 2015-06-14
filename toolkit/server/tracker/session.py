@@ -1,6 +1,4 @@
-
 class Session(object):
-
     def __init__(self, name, addr):
         self.name = name
         self.addr = addr
@@ -11,6 +9,7 @@ class Session(object):
 
     def kill(self):
         self.killed = True
+
 
 def create(*args):
     return Session(*args)

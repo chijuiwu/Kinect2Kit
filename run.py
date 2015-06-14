@@ -1,6 +1,6 @@
-
 import toolkit
 import argparse
+
 
 def main():
     parser = argparse.ArgumentParser(
@@ -20,6 +20,7 @@ def main():
     args = parser.parse_args()
 
     toolkit.server.run(args.host, args.port)
+
 
 if __name__ == "__main__":
     main()

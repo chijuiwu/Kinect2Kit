@@ -1,4 +1,3 @@
-
 class Kinect(object):
     def __init__(self, name, addr, tilt_angle, height, depth_frame_width, depth_frame_height):
         self.name = name
@@ -8,8 +7,8 @@ class Kinect(object):
         self.depth_frame_width = depth_frame_width
         self.depth_frame_height = depth_frame_height
         self.calibrated = False
-        self.uncalibrated_frames = list()
         self.body_frames = list()
+        self.skeletons = list()
 
     def get_name(self):
         return self.name
@@ -23,17 +22,18 @@ class Kinect(object):
     def get_height(self):
         return self.height
 
-    def get_uncalibrated_frames_count(self):
-        return self.uncalibrated_frames.count()
+    def get_bodyframes(self):
+        return self.body_frames
 
-    def get_uncalibrated_frames(self):
-        return self.uncalibrated_frames
+    def update_bodyframe(self, body_frame):
+        self.body_frames.append(body_frame)
 
-    def update_body_stream(self, body_frame):
-        if not self.calibrated:
-            self.uncalibrated_frames.append(body_frame)
-        else:
-            self.body_frames.append(body_frame)
+    def get_skeletons(self):
+        return self.skeletons
+
+    def add_skeleton(self, skeleton):
+        self.skeletons.append(skeleton)
+
 
 def create(*args):
     return Kinect(*args)

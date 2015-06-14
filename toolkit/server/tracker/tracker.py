@@ -1,19 +1,29 @@
-
 from .worldview import WorldViewCoordinateSystem as WorldViewCS
 from . import skeleton
-from . import result
 from . import kinect
 from . import session
+from .result import result
+
 
 class Tracker(object):
-
     def __init__(self, calibration_frames):
         self.session = None
-        self.kinects = dict()
+        self.kinects_dict = dict()
         self.calibration_frames = calibration_frames
         self.calibration_started = False
-        self.calibrated = False
+        self.calibration_acquired = False
+        self.calibration_resolved = False
+        self.tracking = False
         self.result = None
+
+    def reset(self):
+        self.session = None
+        self.kinects_dict = dict()
+        self.calibration_started = False
+        self.calibration_acquired = False
+        self.calibration_resolved = False
+        self.tracking = False
+        self.result = False
 
     def set_session(self, name, addr):
         self.session = session.create(name, addr)
@@ -30,68 +40,72 @@ class Tracker(object):
 
     def add_kinect(self, name, addr, tilt_angle, height, depth_frame_width, depth_frame_height):
         k = kinect.create(name, addr, tilt_angle, height, depth_frame_width, depth_frame_height)
-        self.kinects[addr] = k
+        self.kinects_dict[addr] = k
 
     def get_kinect(self, addr):
-        if addr in self.kinects:
-            return self.kinects[addr]
+        if addr in self.kinects_dict:
+            return self.kinects_dict[addr]
         else:
             return None
 
-    def remove_kinect(self, addr):
-        del self.kinects[addr]
+    def remove_kinect(self, camera):
+        del self.kinects_dict[camera.addr]
+
+    def is_tracking(self):
+        return self.tracking
+
+    def is_acquiring_calibration(self):
+        return self.calibration_started and not self.calibration_acquired
+
+    def acquire_calibration(self):
+        self.calibration_started = True
 
     def __calibrate_kinect(self, camera):
+        uncalibrated_frames = camera.get_uncalibrated_frames()
         frames = list()
         while len(frames) != self.calibration_frames:
-            frames.append(kinect.get_uncalibrated_frames().pop())
+            frames.append(uncalibrated_frames.pop())
         last_frame = frames[-1]
-        for person_idx in xrange(last_frame["Bodies"]["Count"]):
-            bodies = list()
+        timestamp = last_frame["TimeStamp"]
+        for body_idx in xrange(last_frame["Bodies"]["Count"]):
+            skeletons = list()
             for frame_idx in xrange(len(frames)):
-                bodies.append(frames.remove())
-            init_angle = WorldViewCS.calculate_init_angle(bodies)
-            init_position = WorldViewCS.calculate_init_center_position(bodies)
-            s = skeleton.create(init_angle, init_position)
+                skeletons.append(frames[frame_idx]["Bodies"][body_idx])
+            body = last_frame["Bodies"][body_idx]
+            init_tracking_id = body["TrackingId"]
+            init_angle = WorldViewCS.calculate_init_angle(skeletons)
+            init_center_position = WorldViewCS.calculate_init_center_position(skeletons)
+            init_body = WorldViewCS.create_body(body, init_angle, init_center_position)
+            camera.add_skeleton(
+                skeleton.create(timestamp, init_tracking_id, init_body, init_angle, init_center_position))
 
-    def __try_(self):
-        sufficient_frames = True
-        for name, kinect in kinects.iteritems():
-            if not kinect.get_uncalibrated_frames_count() >= self.calibration_frames:
-                sufficient_frames = False
-                if not sufficient_frames:
-                    return False
-        if sufficient_frames:
-            for _, kinect in kinects.iteritems():
-                self.__calibrate_kinect(kinect)
-            return True
+    def resolve_calibration(self):
+        assert self.calibration_acquired
+        for camera in self.kinects_dict.itervalues():
+            self.__calibrate_kinect(camera)
+        self.result = self._detect_people()
+        self.calibration_resolved = True
 
-    def calibrate(self):
-        """
-        Starts calibration process
-        """
+    def track(self):
+        assert self.calibration_resolved
+        self.tracking = True
 
-        self.calibration_started = True
-        self.calibrated = False
-        self.result = None
+    def _calibration_ready(self):
+        for camera in self.kinects_dict.itervalues():
+            if not len(camera.get_bodyframes()) >= self.calibration_frames:
+                return False
+        return True
 
-    def __detect_people(self):
-        global tracking_result
-        tracking_result = result.create()
-        return tracking_result
+    def _detect_people(self):
+        return result.create()
 
-    def track(self, camera, body_frame):
-        """
-        Performs tracking
-        """
+    def update_result(self, camera, body_frame):
+        camera.update_bodyfrmae(body_frame)
+        if not self.calibration_acquired and self._calibration_ready():
+            self.calibration_acquired = True
+        if self.calibration_resolved:
+            self.result = self._detect_people()
 
-        if self.calibration_started:
-            camera.update_body_stream(body_frame)
-        if self.calibrated:
-            self.__detect_people()
-            return result.jsonify(self.result)
-        else:
-            return result.jsonify(None)
 
 def create(*args):
     return Tracker(*args)

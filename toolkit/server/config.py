@@ -8,3 +8,7 @@ kinect2kit_server = Flask(__name__)
 kinect2kit_server.config.from_object(__name__)
 
 kinect2kit_tracker = tracker.create(CALIBRATION_FRAMES)
+
+bodyframe_api = {
+
+}
