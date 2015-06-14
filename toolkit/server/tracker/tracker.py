@@ -83,7 +83,6 @@ class Tracker(object):
         assert self.calibration_acquired
         for camera in self.kinects_dict.itervalues():
             self.__calibrate_kinect(camera)
-        self.result = self._detect_people()
         self.calibration_resolved = True
 
     def track(self):
@@ -103,7 +102,7 @@ class Tracker(object):
         camera.update_bodyfrmae(body_frame)
         if not self.calibration_acquired and self._calibration_ready():
             self.calibration_acquired = True
-        if self.calibration_resolved:
+        if self.tracking:
             self.result = self._detect_people()
 
 
