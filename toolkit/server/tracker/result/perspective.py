@@ -4,6 +4,12 @@ class Perspective(object):
         self.addr = addr
         self.people_dict = dict()
 
+    def get_name(self):
+        return self.name
+
+    def get_addr(self):
+        return self.name
+
     def add_person(self, person):
         self.people_dict[person.get_name()] = person
 

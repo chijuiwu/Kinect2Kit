@@ -57,11 +57,11 @@ def calibrate_resolve():
         return jsonify(message="Unauthorized access"), 401
 
 
-@kinect2kit_server.route("/track", methods=["POST"])
+@kinect2kit_server.route("/start", methods=["POST"])
 def track():
     addr = request.remote_addr
     if kinect2kit_tracker.authenticate(addr):
-        kinect2kit_tracker.track()
+        kinect2kit_tracker.start_tracking()
         return jsonify(message="OK")
     else:
         return jsonify(message="Unauthorized access"), 401

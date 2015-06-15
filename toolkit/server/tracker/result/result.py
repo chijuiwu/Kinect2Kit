@@ -3,6 +3,9 @@ class Result(object):
         self.timestamp = timestamp
         self.perspectives_dict = dict()
 
+    def get_timestamp(self):
+        return self.timestamp
+
     def add_perspective(self, perspective):
         self.perspectives_dict[perspective.get_namme()] = perspective
 

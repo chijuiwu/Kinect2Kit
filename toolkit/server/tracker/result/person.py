@@ -14,6 +14,9 @@ class Person(object):
             "joints": joints_dict
         }
 
+    def get_skeletons(self):
+        return self.skeletons_dict
+
 
 def create(*args):
     return Person(*args)
