@@ -119,10 +119,8 @@ class Tracker(object):
 
             # find by spatial proximity
             not_updated = [s for s in skeletons if s.get_last_updated() != timestamp]
-            joints_differences = [(s, kinect.Kinect.calculate_joints_differences(s.get_kinect_body(), kinect_body)) for
-                                  s in not_updated]
-            joints_differences.sort(key=lambda tup: tup[1])
-            s = next(joints_differences)[0]
+            not_updated.sort(key=lambda other: kinect.Kinect.calculate_joints_differences(other.get_kinect_body(), kinect_body))
+            s = next(not_updated)
             if s is not None:
                 worldview_body = WorldViewCS.create_body(kinect_body, s.get_init_angle(), s.get_init_center_position())
                 s.update(timestamp, tracking_id, kinect_body, worldview_body)
@@ -141,13 +139,17 @@ class Tracker(object):
         assert self.calibration_acquired or self.tracking
         if self.calibration_acquired:
             r = result.create_result(timestamp)
-            base_fov = next(self.kinects_dict.itervalues())
-            for skeleton in base_fov.get_skeletons():
-                same_person_skeletons = []
-                same_person_skeletons.append(skeleton)
-                other_fovs = [camera for camera in self.kinects_dict.itervalues() if camera.get_addr() != base_fov.get_addr()]
-                for other_fov in other_fovs:
-                    other_skeletons = [(s, WorldViewCS.calculate_joints_differences(s.get_worldview_body(), skeleton.get_worldview_body()))]
+            for base_fov in self.kinects_dict.itervalues():
+                perspective = result.create_perspective(base_fov.get_name(), base_fov.get_addr())
+                for base_skeleton in base_fov.get_skeletons():
+                    person = result.create_person()
+                    same_person_skeletons = list()
+                    same_person_skeletons.append(base_skeleton)
+                    other_fovs = [camera for camera in self.kinects_dict.itervalues() if camera.get_addr() != base_fov.get_addr()]
+                    for other_fov in other_fovs:
+                        other_skeletons = other_fov.get_skeletons()
+                        other_skeletons.sort(key=lambda s: WorldViewCS.calculate_joints_differences(s.get_worldview_body(0), base_skeleton.get_worldview_body()))
+                        same_person_skeletons.append(next(other_skeletons))
 
 
             for fov in self.kinects_dict.itervalues():
