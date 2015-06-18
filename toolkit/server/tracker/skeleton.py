@@ -6,11 +6,12 @@ class Skeleton(object):
         self.kinect_body = init_kinect_body
         self.worldview_body = init_worldview_body
         self.previous_bodies_list = list()
-        self.previous_bodies_list.append((init_kinect_body, init_worldview_body))
+        self.previous_bodies_list.append((init_timestamp, init_kinect_body, init_worldview_body))
         self.init_angle = init_angle
         self.init_center_position = init_center_position
 
-    def update(self, timestamp, tracking_id, kinect_body, worldview_body):
+    def update(self, timestamp, tracking_id=None, kinect_body=None, worldview_body=None):
+        self.previous_bodies_list.append((self.last_updated, self.kinect_body, self.worldview_body))
         self.last_updated = timestamp
         self.tracking_id = tracking_id
         self.kinect_body = kinect_body

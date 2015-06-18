@@ -1,4 +1,3 @@
-
 __all__ = ["tracker", "kinect", "result", "skeleton", "worldview"]
 
 from . import tracker

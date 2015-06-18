@@ -58,14 +58,38 @@ class WorldViewCoordinateSystem:
             joints_dict[jt_type] = WorldViewJoint(WorldViewCoordinate(rotate_x, rotate_y, rotate_z))
         return WorldViewBody(joints_dict)
 
+    @staticmethod
+    def calculate_joints_differences(worldview_body1, worldview_body2):
+        if worldview_body1 is None or worldview_body2 is None:
+            return float("inf")
+        total_difference = 0
+        body_joints_union = worldview_body1["Joints"].viewkeys() & worldview_body2["Joints"].viewkeys()
+        for joint_type in body_joints_union:
+            joint_1_coordinate = worldview_body1["Joints"][joint_type]["WorldViewPoint"]
+            joint_2_coordinate = worldview_body2["Joints"][joint_type]["WorldViewPoint"]
+            total_difference += math.sqrt(
+                math.pow(joint_1_coordinate.x - joint_2_coordinate.x, 2) +
+                math.pow(joint_1_coordinate.y - joint_2_coordinate.y, 2) +
+                math.pow(joint_1_coordinate.z - joint_2_coordinate.z, 2))
+        return total_difference
+
+
 class WorldViewBody(object):
     def __init__(self, joints_dict):
         self.joints_dict = joints_dict
+
+    def __getitem__(self, item):
+        if item == "Joints":
+            return self.joints_dict
 
 
 class WorldViewJoint(object):
     def __init__(self, position):
         self.position = position
+
+    def __getitem__(self, item):
+        if item == "WorldViewPoint":
+            return self.position
 
 
 class WorldViewCoordinate(object):

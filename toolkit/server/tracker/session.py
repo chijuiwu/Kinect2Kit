@@ -10,6 +10,5 @@ class Session(object):
     def kill(self):
         self.killed = True
 
-
 def create(*args):
     return Session(*args)

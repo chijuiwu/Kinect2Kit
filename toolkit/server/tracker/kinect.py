@@ -37,12 +37,14 @@ class Kinect(object):
         self.skeletons_list.append(skeleton)
 
     @staticmethod
-    def calculate_joints_differences(body_1, body_2):
+    def calculate_joints_differences(kinect_body_1, kinect_body_2):
+        if kinect_body_1 is None or kinect_body_2 is None:
+            return float("inf")
         total_difference = 0
-        body_joints_union = body_1["Joints"].viewkeys() & body_2["Joints"].viewkeys()
+        body_joints_union = kinect_body_1["Joints"].viewkeys() & kinect_body_2["Joints"].viewkeys()
         for joint_type in body_joints_union:
-            joint_1_coordinate = body_1["Joints"][joint_type]["CameraSpacePoint"]
-            joint_2_coordinate = body_2["Joints"][joint_type]["CameraSpacePoint"]
+            joint_1_coordinate = kinect_body_1["Joints"][joint_type]["CameraSpacePoint"]
+            joint_2_coordinate = kinect_body_2["Joints"][joint_type]["CameraSpacePoint"]
             total_difference += math.sqrt(
                 math.pow(joint_1_coordinate.x - joint_2_coordinate.x, 2) +
                 math.pow(joint_1_coordinate.y - joint_2_coordinate.y, 2) +

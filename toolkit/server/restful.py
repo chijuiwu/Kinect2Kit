@@ -18,11 +18,6 @@ def new():
         return jsonify(message="Failed"), 400
 
 
-@kinect2kit_server.route("/setup", methods=["POST"])
-def setup():
-    pass
-
-
 @kinect2kit_server.route("/kill", methods=["POST"])
 def kill():
     """
@@ -57,7 +52,7 @@ def calibrate_resolve():
         return jsonify(message="Unauthorized access"), 401
 
 
-@kinect2kit_server.route("/start", methods=["POST"])
+@kinect2kit_server.route("/track", methods=["POST"])
 def track():
     addr = request.remote_addr
     if kinect2kit_tracker.authenticate(addr):
@@ -65,28 +60,6 @@ def track():
         return jsonify(message="OK")
     else:
         return jsonify(message="Unauthorized access"), 401
-
-
-@kinect2kit_server.route("/stream", methods=["POST"])
-def stream():
-    """
-    Streams the latest Kinect inputs to the server
-    """
-
-    try:
-        addr = request.remote_addr
-        camera = kinect2kit_tracker.get_kinect(addr)
-        if camera is not None:
-            if kinect2kit_tracker.is_tracking() or kinect2kit_tracker.is_acquiring_calibration():
-                body_frame = json.loads(request.form["body_frame"])
-                kinect2kit_tracker.update_result(camera, body_frame)
-                return jsonify(message="OK")
-            else:
-                return jsonify(message="Not required"), 400
-        else:
-            return jsonify(message="Unauthorized access"), 401
-    except KeyError:
-        return jsonify(message="Failed"), 400
 
 
 @kinect2kit_server.route("/connect", methods=["POST"])
@@ -123,6 +96,28 @@ def disconnect():
         return jsonify(message="Unauthorized access"), 401
 
 
+@kinect2kit_server.route("/stream", methods=["POST"])
+def stream():
+    """
+    Streams the latest Kinect inputs to the server
+    """
+
+    try:
+        addr = request.remote_addr
+        camera = kinect2kit_tracker.get_kinect(addr)
+        if camera is not None:
+            if kinect2kit_tracker.is_tracking() or kinect2kit_tracker.is_acquiring_calibration():
+                body_frame = json.loads(request.form["body_frame"])
+                kinect2kit_tracker.update_result(camera, body_frame)
+                return jsonify(message="OK")
+            else:
+                return jsonify(message="Not required"), 400
+        else:
+            return jsonify(message="Unauthorized access"), 401
+    except KeyError:
+        return jsonify(message="Failed"), 400
+
+
 @kinect2kit_server.route("/bodyframe", methods=["GET"])
 def get_bodyframe_structure():
     pass
@@ -143,4 +138,9 @@ def get_result():
     Gets the latest tracking result
     """
 
+    pass
+
+
+@kinect2kit_server.route("/result/<int:session_id>", methods=["GET"])
+def get_session_result(session_id):
     pass
