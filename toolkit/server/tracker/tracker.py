@@ -49,8 +49,8 @@ class Tracker(object):
         else:
             return None
 
-    def remove_kinect(self, camera):
-        del self.kinects_dict[camera.addr]
+    def remove_kinect(self, addr):
+        del self.kinects_dict[addr]
 
     def is_tracking(self):
         return self.tracking
