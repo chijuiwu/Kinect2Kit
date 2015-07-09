@@ -80,15 +80,14 @@ def stream():
     Stream the latest Kinect output frames to the server, including BodyFrame.
     """
 
-    if not kinect2kit_tracker.is_tracking() or not kinect2kit_tracker.is_acquiring_calibration():
+    if not kinect2kit_tracker.is_acquiring_calibration() or not kinect2kit_tracker.is_tracking():
         return jsonify(message="Ignored")
     try:
         kinect_addr = request.remote_addr
-        kinect_bodyframe = request.form["bodyframe"]
-        kinect = kinect2kit_tracker.get_kinect(kinect_addr)
-        if kinect is not None:
-            bodyframe = json.loads(kinect_bodyframe)
-            kinect2kit_tracker.update_result(kinect, bodyframe)
+        bodyframe = json.loads(request.form["bodyframe"])
+        camera = kinect2kit_tracker.get_kinect(kinect_addr)
+        if camera is not None:
+            kinect2kit_tracker.update_result(camera, bodyframe)
             return jsonify(message="OK")
         else:
             return jsonify(message="Kinect not found"), 400

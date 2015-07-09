@@ -1,12 +1,11 @@
 class Skeleton(object):
-    def __init__(self, init_timestamp, init_tracking_id, init_kinect_body, init_worldview_body, init_angle,
-                 init_center_position):
-        self.last_updated = init_timestamp
-        self.tracking_id = init_tracking_id
-        self.kinect_body = init_kinect_body
-        self.worldview_body = init_worldview_body
+    def __init__(self, timestamp, tracking_id, kinect_body, worldview_body, init_angle, init_center_position):
+        self.last_updated = timestamp
+        self.tracking_id = tracking_id
+        self.kinect_body = kinect_body
+        self.worldview_body = worldview_body
         self.previous_bodies_list = list()
-        self.previous_bodies_list.append((init_timestamp, init_kinect_body, init_worldview_body))
+        self.previous_bodies_list.append((timestamp, kinect_body, worldview_body))
         self.init_angle = init_angle
         self.init_center_position = init_center_position
 
