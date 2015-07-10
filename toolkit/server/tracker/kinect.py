@@ -37,6 +37,10 @@ class Kinect(object):
         self.skeletons_list.append(skeleton)
 
     @staticmethod
+    def create_body(worldview_body, init_angle, init_center_position):
+        pass
+
+    @staticmethod
     def calculate_joints_differences(kinect_body_1, kinect_body_2):
         if kinect_body_1 is None or kinect_body_2 is None:
             return float("inf")

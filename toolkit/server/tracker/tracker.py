@@ -14,6 +14,7 @@ class Tracker(object):
         self.calibration_acquired = False
         self.calibration_resolved = False
         self.tracking = False
+        self.people_count = 0
         self.result = None
         self.results_list = list()
 
@@ -24,6 +25,7 @@ class Tracker(object):
         self.calibration_acquired = False
         self.calibration_resolved = False
         self.tracking = False
+        self.people_count = 0
         self.result = None
 
     def set_session(self, name, addr):
@@ -91,7 +93,8 @@ class Tracker(object):
         # create a skeleton for each body
         last_frame = calibration_frames[-1]
         timestamp = last_frame["Timestamp"]
-        for body_idx in xrange(last_frame["Bodies"]["Count"]):
+        bodies_count = last_frame["Bodies"]["Count"]
+        for body_idx in xrange(bodies_count):
             skeletons = list()
             for frame_idx in xrange(len(calibration_frames)):
                 skeletons.append(calibration_frames[frame_idx]["Bodies"][body_idx])
@@ -104,116 +107,144 @@ class Tracker(object):
                                             init_center_position)
             camera.add_skeleton(init_skeleton)
 
+        self.people_count = bodies_count
+
     def _detect_people(self, timestamp):
         """
         Match initial skeletons across multiple Kinects. Assume every person is visible to all Kinects.
         """
 
-        assert self.calibration_acquired or self.tracking
-
-        if self.calibration_acquired:
-            r = result.create_result(timestamp)
-            for base_fov in self.kinects_dict.itervalues():
-                perspective = result.create_perspective(base_fov.get_name(), base_fov.get_addr())
-                for base_skeleton in base_fov.get_skeletons():
-                    person = result.create_person()
-                    same_person_skeletons = list()
-                    same_person_skeletons.append(base_skeleton)
-                    other_fovs = [camera for camera in self.kinects_dict.itervalues() if
-                                  camera.get_addr() != base_fov.get_addr()]
-                    for other_fov in other_fovs:
-                        other_skeletons = other_fov.get_skeletons()
-                        other_skeletons.sort(
-                            key=lambda s: WorldViewCS.calculate_joints_differences(s.get_worldview_body(0),
-                                                                                   base_skeleton.get_worldview_body()))
-                        same_person_skeletons.append(next(other_skeletons))
-
-            for fov in self.kinects_dict.itervalues():
-                perspective = result.create_perspective(fov.get_name(), fov.get_addr())
-                # match by worldview proximity
-                for skeleton in skeletons_in_fov:
-
-        else:
-            pass
-
-    def resolve_calibration(self):
-        """
-        Run the calibration procedure on the acquired frames
-        """
-
         assert self.calibration_acquired
 
-        # calibrate all Kinects
+        self.result = result.create_result(timestamp)
+
+        # find all skeletons in worldview
+        worldview_skeletons = list()
         for camera in self.kinects_dict.itervalues():
-            self._calibrate_kinect(camera)
+            for s in camera.get_skeletons():
+                worldview_skeletons.append((camera, s))
 
-        # match initial skeletons
-        self._detect_people(None)
+        # match skeletons by their spatial position in worldview
+        skeletons_matches_list = list()
+        for person_idx in xrange(self.people_count):
+            first_skeleton_worldview = worldview_skeletons[0].get_worldview_body()
+            worldview_skeletons.sort(
+                key=lambda (_, s): WorldViewCS.calculate_joints_differences(s.get_worldview_body(),
+                                                                            first_skeleton_worldview))
+            same_person_skeletons_list = list()
+            for pair_idx in xrange(self.people_count):
+                same_person_skeletons_list.append(worldview_skeletons.pop(0))
+            skeletons_matches_list.append(same_person_skeletons_list)
 
-        self.calibration_resolved = True
+        # create multiple perspectives
+        for camera in self.kinects_dict.itervalues():
+            perspective = result.create_perspective(camera.get_name(), camera.get_addr())
 
-    def start_tracking(self):
-        assert self.calibration_resolved
-        self.tracking = True
+            for same_person_skeletons_list in skeletons_matches_list:
+                person = result.create_person()
 
-    def _update_skeletons(self, camera, bodyframe):
-        """
-        Update skeletons' spatial positions
-        """
+                skeleton_in_camera = next(s for c, s in same_person_skeletons_list if c.get_addr() == camera.get_addr())
+                joints_dict = dict()
+                for joint_type, joint in skeleton_in_camera.get_kinect_body()["Joints"].iteritems():
+                    joints_dict[joint_type] = result.create_joint(joint_type, joint["CameraSpacePoint"])
+                person.add_skeleton(False, camera.get_name(), camera.get_addr(), joints_dict)
 
-        assert self.tracking
+                for c, s in same_person_skeletons_list:
+                    if c.get_addr() != camera.get_addr():
+                        kinect_body = kinect.Kinect.create_body(s.get_worldview_body(),
+                                                                skeleton_in_camera.get_init_angle(),
+                                                                skeleton_in_camera.get_init_center_position())
+                        joints_dict = dict()
+                        for joint_type, joint in kinect_body["Joints"].iteritems():
+                            joints_dict[joint_type] = result.create_joint(joint_type, joint["CameraSpacePoint"])
+                        person.add_skeleton(True, c.get_name(), c.get_addr(), joints_dict)
 
-        # error handling here, e.g. new skeleton
+                perspective.add_person(person)
 
-        timestamp = bodyframe["Timestamp"]
-        skeletons = camera.get_skeletons()
 
-        for body_idx in xrange(bodyframe["Bodies"]["Count"]):
-            kinect_body = bodyframe["Bodies"][body_idx]
-            tracking_id = kinect_body["TrackingId"]
+def resolve_calibration(self):
+    """
+    Run the calibration procedure on the acquired frames
+    """
 
-            # find skeleton by tracking id
-            s = next((s for s in skeletons if s.get_tracking_id() == tracking_id), None)
-            if s is not None:
-                worldview_body = WorldViewCS.create_body(kinect_body, s.get_init_angle(), s.get_init_center_position())
-                s.update(timestamp, tracking_id, kinect_body, worldview_body)
-                continue
+    assert self.calibration_acquired
 
-            # find skeleton by spatial proximity
-            other_skeletons = [s for s in skeletons if s.get_last_updated() != timestamp]
-            other_skeletons.sort(
-                key=lambda other: kinect.Kinect.calculate_joints_differences(other.get_kinect_body(), kinect_body))
-            s = next(other_skeletons, None)
-            if s is not None:
-                worldview_body = WorldViewCS.create_body(kinect_body, s.get_init_angle(), s.get_init_center_position())
-                s.update(timestamp, tracking_id, kinect_body, worldview_body)
-                continue
+    # calibrate all Kinects
+    for camera in self.kinects_dict.itervalues():
+        self._calibrate_kinect(camera)
 
-        # other skeletons are not visible
-        lost_track = [s for s in skeletons if s.get_last_updated() != timestamp]
-        for s in lost_track:
-            s.update(timestamp)
+    # create initial tracking result
+    self._detect_people(None)
 
-    def update_result(self, camera, bodyframe):
-        """
-        Update the tracking result
-        """
+    self.calibration_resolved = True
 
-        if self.acquiring_calibration:
-            camera.add_uncalibrated_bodyframe(bodyframe)
-            if self.get_required_calibration_frames() <= 0:
-                self.acquiring_calibration = False
-                self.calibration_acquired = True
 
-        if self.tracking:
-            self._update_skeletons(camera, bodyframe)
-            self._detect_people(bodyframe["Timestamp"])
+def start_tracking(self):
+    assert self.calibration_resolved
+    self.tracking = True
 
-    def get_result(self):
-        pass
 
-    def output_results(self):
-        pass
+def _update_skeletons(self, camera, bodyframe):
+    """
+    Update skeletons' spatial positions
+    """
+
+    assert self.tracking
+
+    # error handling here, e.g. new skeleton
+
+    timestamp = bodyframe["Timestamp"]
+    skeletons = camera.get_skeletons()
+
+    for body_idx in xrange(bodyframe["Bodies"]["Count"]):
+        kinect_body = bodyframe["Bodies"][body_idx]
+        tracking_id = kinect_body["TrackingId"]
+
+        # find skeleton by tracking id
+        s = next((s for s in skeletons if s.get_tracking_id() == tracking_id), None)
+        if s is not None:
+            worldview_body = WorldViewCS.create_body(kinect_body, s.get_init_angle(), s.get_init_center_position())
+            s.update(timestamp, tracking_id, kinect_body, worldview_body)
+            continue
+
+        # find skeleton by spatial proximity
+        other_skeletons = [s for s in skeletons if s.get_last_updated() != timestamp]
+        other_skeletons.sort(
+            key=lambda other: kinect.Kinect.calculate_joints_differences(other.get_kinect_body(), kinect_body))
+        s = next(other_skeletons, None)
+        if s is not None:
+            worldview_body = WorldViewCS.create_body(kinect_body, s.get_init_angle(), s.get_init_center_position())
+            s.update(timestamp, tracking_id, kinect_body, worldview_body)
+            continue
+
+    # other skeletons are not visible
+    lost_track = [s for s in skeletons if s.get_last_updated() != timestamp]
+    for s in lost_track:
+        s.update(timestamp)
+
+
+def _update_result(self, timestamp):
+    assert self.tracking
+
+
+def update_bodyframe(self, camera, bodyframe):
+    """
+    Update the tracking result
+    """
+
+    if self.acquiring_calibration:
+        camera.add_uncalibrated_bodyframe(bodyframe)
+        if self.get_required_calibration_frames() <= 0:
+            self.acquiring_calibration = False
+            self.calibration_acquired = True
+
+    if self.tracking:
+        self._update_skeletons(camera, bodyframe)
+        self._update_result(bodyframe["Timestamp"])
+
+
+def get_result(self):
+    pass
 
 
 def create(*args):

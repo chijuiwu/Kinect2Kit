@@ -43,9 +43,9 @@ class WorldViewCoordinateSystem:
         return WorldViewCoordinate(center_x, center_y, center_z)
 
     @staticmethod
-    def create_body(body, init_angle, init_center_position):
+    def create_body(kinect_body, init_angle, init_center_position):
         joints_dict = dict()
-        for jt_type, joint in body.joints:
+        for jt_type, joint in kinect_body["Joints"]:
             position = joint["CameraSpacePoint"]
             # translation
             translate_x = position - init_center_position.x

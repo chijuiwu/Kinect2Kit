@@ -87,7 +87,7 @@ def stream():
         bodyframe = json.loads(request.form["bodyframe"])
         camera = kinect2kit_tracker.get_kinect(kinect_addr)
         if camera is not None:
-            kinect2kit_tracker.update_result(camera, bodyframe)
+            kinect2kit_tracker.update_bodyframe(camera, bodyframe)
             return jsonify(message="OK")
         else:
             return jsonify(message="Kinect not found"), 400

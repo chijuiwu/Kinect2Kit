@@ -34,7 +34,7 @@ class Skeleton(object):
     def get_init_angle(self):
         return self.init_angle
 
-    def get_init_position(self):
+    def get_init_center_position(self):
         return self.init_center_position
 
 

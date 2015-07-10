@@ -21,19 +21,19 @@ class Perspective(object):
     def __init__(self, name, addr):
         self.name = name
         self.addr = addr
-        self.people_dict = dict()
+        self.people_list = list()
 
     def get_name(self):
         return self.name
 
     def get_addr(self):
-        return self.name
+        return self.addr
 
     def add_person(self, person):
-        self.people_dict[person.get_name()] = person
+        self.people_list.append(person)
 
     def get_people(self):
-        return self.people_dict
+        return self.people_list
 
 
 def create_perspective(*args):
@@ -41,12 +41,8 @@ def create_perspective(*args):
 
 
 class Person(object):
-    def __init__(self, name):
-        self.name = name
+    def __init__(self):
         self.skeletons_dict = dict()
-
-    def get_name(self):
-        return self.name
 
     def add_skeleton(self, is_transformed, kinect_name, kinect_addr, joints_dict):
         self.skeletons_dict[kinect_addr] = {
@@ -60,24 +56,20 @@ class Person(object):
         return self.skeletons_dict
 
 
-def create_person(*args):
-    return Person(*args)
+def create_person():
+    return Person()
 
 
 class Joint(object):
-    def __init__(self, joint_type, kinect_coordinate, worldview_coordinate):
+    def __init__(self, joint_type, kinect_coordinate):
         self.joint_type = joint_type
         self.kinect_coordinate = kinect_coordinate
-        self.worldview_coordinate = worldview_coordinate
 
     def get_joint_type(self):
         return self.joint_type
 
     def get_kinect_coordinate(self):
         return self.kinect_coordinate
-
-    def get_worldview_coordinate(self):
-        return self.worldview_coordinate
 
 
 def create_joint(*args):
