@@ -7,14 +7,15 @@ from . import result
 
 class Tracker(object):
     def __init__(self, calibration_frames):
+        self.calibration_frames = calibration_frames
         self.session = None
         self.kinects_dict = dict()
-        self.calibration_frames = calibration_frames
         self.acquiring_calibration = False
         self.calibration_acquired = False
         self.calibration_resolved = False
         self.tracking = False
         self.people_count = 0
+        self.last_timestamp = None
         self.result = None
         self.results_list = list()
 
@@ -26,6 +27,7 @@ class Tracker(object):
         self.calibration_resolved = False
         self.tracking = False
         self.people_count = 0
+        self.last_timestamp = None
         self.result = None
 
     def set_session(self, name, addr):
@@ -81,7 +83,7 @@ class Tracker(object):
 
     def _calibrate_kinect(self, camera):
         """
-        Calibrate a single Kinect, calculate the initial angle and center position for each skeleton
+        Calibrate a single Kinect, calculate the initial angle and center position for every skeleton in the Kinect FOV
         """
 
         # use most recent frames for calibration
@@ -107,11 +109,13 @@ class Tracker(object):
                                             init_center_position)
             camera.add_skeleton(init_skeleton)
 
+        # quick way of keeping track of total people and current timestamp
         self.people_count = bodies_count
+        self.last_timestamp = timestamp
 
     def _detect_people(self, timestamp):
         """
-        Match initial skeletons across multiple Kinects. Assume every person is visible to all Kinects.
+        Match initial skeletons across multiple Kinects. Assume every person is tracked inside all Kinects.
         """
 
         assert self.calibration_acquired
@@ -129,8 +133,8 @@ class Tracker(object):
         for person_idx in xrange(self.people_count):
             first_skeleton_worldview = worldview_skeletons[0].get_worldview_body()
             worldview_skeletons.sort(
-                key=lambda (_, s): WorldViewCS.calculate_joints_differences(s.get_worldview_body(),
-                                                                            first_skeleton_worldview))
+                key=lambda c, s: WorldViewCS.calculate_joints_differences(s.get_worldview_body(),
+                                                                          first_skeleton_worldview))
             same_person_skeletons_list = list()
             for pair_idx in xrange(self.people_count):
                 same_person_skeletons_list.append(worldview_skeletons.pop(0))
@@ -143,6 +147,7 @@ class Tracker(object):
             for same_person_skeletons_list in skeletons_matches_list:
                 person = result.create_person()
 
+                # find the person's skeleton inside this FOV
                 skeleton_in_camera = next(s for c, s in same_person_skeletons_list if c.get_addr() == camera.get_addr())
                 joints_dict = dict()
                 for joint_type, joint in skeleton_in_camera.get_kinect_body()["Joints"].iteritems():
@@ -161,6 +166,8 @@ class Tracker(object):
 
                 perspective.add_person(person)
 
+            self.result.add_perspective(perspective)
+
 
 def resolve_calibration(self):
     """
@@ -174,12 +181,16 @@ def resolve_calibration(self):
         self._calibrate_kinect(camera)
 
     # create initial tracking result
-    self._detect_people(None)
+    self._detect_people(self.last_timestamp)
 
     self.calibration_resolved = True
 
 
 def start_tracking(self):
+    """
+    Set the tracking flag to be true
+    """
+
     assert self.calibration_resolved
     self.tracking = True
 
@@ -244,7 +255,7 @@ def update_bodyframe(self, camera, bodyframe):
 
 
 def get_result(self):
-    pass
+    return self.result
 
 
 def create(*args):

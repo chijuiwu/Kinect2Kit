@@ -1,4 +1,5 @@
 import math
+import numpy as np
 
 
 class Kinect(object):
@@ -38,7 +39,31 @@ class Kinect(object):
 
     @staticmethod
     def create_body(worldview_body, init_angle, init_center_position):
-        pass
+        kinect_body = KinectBody()
+
+        for joint_type, joint in worldview_body["Joints"].iteritems():
+            worldview_coordinate = joint["WorldViewPoint"]
+
+            sin_angle = math.sin(init_angle)
+            cos_angle = math.cos(init_angle)
+            angle_matrix = np.matrix([[cos_angle - sin_angle], [sin_angle, cos_angle]])
+            inverse_angle_matrix = angle_matrix.I
+
+            translated_x = float(worldview_coordinate.x * inverse_angle_matrix.item(0, 0) +
+                                 worldview_coordinate.z * inverse_angle_matrix.item(1, 0))
+            translated_y = worldview_coordinate.y
+            translated_z = float(worldview_coordinate.x * inverse_angle_matrix.item(0, 1) +
+                                 worldview_coordinate.z * inverse_angle_matrix.item(1, 1))
+
+            final_x = translated_x + init_center_position.x
+            final_y = translated_y + init_center_position.y
+            final_z = translated_z + init_center_position.z
+            kinect_coordinate = KinectCoordinate(final_x, final_y, final_z)
+            kinect_joint = KinectJoint(kinect_coordinate)
+
+            kinect_body["Joints"][joint_type] = kinect_joint
+
+        return kinect_body
 
     @staticmethod
     def calculate_joints_differences(kinect_body_1, kinect_body_2):
@@ -58,3 +83,28 @@ class Kinect(object):
 
 def create(*args):
     return Kinect(*args)
+
+
+class KinectBody(object):
+    def __init__(self):
+        self.joints_dict = dict()
+
+    def __getitem__(self, item):
+        if item == "Joints":
+            return self.joints_dict
+
+
+class KinectJoint(object):
+    def __init__(self, kinect_coordinate):
+        self.kinect_coordinate = kinect_coordinate
+
+    def __getitem__(self, item):
+        if item == "CameraSpacePoint":
+            return self.kinect_coordinate
+
+
+class KinectCoordinate(object):
+    def __init__(self, x, y, z):
+        self.x = x
+        self.y = y
+        self.z = z
