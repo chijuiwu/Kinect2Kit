@@ -38,7 +38,7 @@ class Tracker(object):
         self.session = None
 
     def authenticate(self, addr):
-        if self.session.get_addr() == addr:
+        if self.session is not None and self.session.get_addr() == addr:
             return True
         else:
             return False

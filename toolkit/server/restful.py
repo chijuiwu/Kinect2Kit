@@ -15,7 +15,7 @@ def new_session():
         kinect2kit_tracker.set_session(name, app_addr)
         return jsonify(message="OK")
     except KeyError:
-        return jsonify(message="Invalid request"), 400
+        return jsonify(message="Failed, invalid request"), 400
 
 
 @kinect2kit_server.route("/session/kill", methods=["POST"])
@@ -29,7 +29,7 @@ def kill_session():
         kinect2kit_tracker.kill_session()
         return jsonify(message="OK")
     else:
-        return jsonify(message="Unauthorized access"), 401
+        return jsonify(message="Failed, unauthorized access"), 401
 
 
 @kinect2kit_server.route("/calibration/acquire", methods=["POST"])
@@ -43,7 +43,7 @@ def acquire_calibration():
         kinect2kit_tracker.acquire_calibration()
         return jsonify(message="OK")
     else:
-        return jsonify(message="Unauthorized access"), 401
+        return jsonify(message="Failed, unauthorized access"), 401
 
 
 @kinect2kit_server.route("/calibration/resolve", methods=["POST"])
@@ -57,7 +57,7 @@ def resolve_calibration():
         kinect2kit_tracker.resolve_calibration()
         return jsonify(message="OK")
     else:
-        return jsonify(message="Unauthorized access"), 401
+        return jsonify(message="Failed, unauthorized access"), 401
 
 
 @kinect2kit_server.route("/track/start", methods=["POST"])
@@ -71,7 +71,7 @@ def track():
         kinect2kit_tracker.start_tracking()
         return jsonify(message="OK")
     else:
-        return jsonify(message="Unauthorized access"), 401
+        return jsonify(message="Failed, unauthorized access"), 401
 
 
 @kinect2kit_server.route("/track/stream", methods=["POST"])
@@ -106,7 +106,7 @@ def get_result():
         # get result
         return jsonify(result="result")
     else:
-        return jsonify(message="Unauthorized access"), 401
+        return jsonify(message="Failed, unauthorized access"), 401
 
 
 @kinect2kit_server.route("/kinect/add", methods=["POST"])
@@ -127,9 +127,9 @@ def add_kinect():
             kinect2kit_tracker.add_kinect(name, addr, tilt_angle, height, depth_frame_width, depth_frame_height)
             return jsonify(message="OK")
         except KeyError:
-            return jsonify(message="Invalid request"), 400
+            return jsonify(message="Failed, invalid request"), 400
     else:
-        return jsonify(message="Unauthorized access"), 401
+        return jsonify(message="Failed, unauthorized access"), 401
 
 
 @kinect2kit_server.route("/kinect/remove", methods=["POST"])
@@ -146,11 +146,11 @@ def remove_kinect():
                 kinect2kit_tracker.remove_kinect(kinect_addr)
                 return jsonify(message="OK")
             else:
-                return jsonify(message="Unauthorized access"), 401
+                return jsonify(message="Failed, unauthorized access"), 401
         except KeyError:
-            return jsonify(message="Invalid request"), 400
+            return jsonify(message="Failed, invalid request"), 400
     else:
-        return jsonify(message="Unauthorized access"), 401
+        return jsonify(message="Failed, unauthorized access"), 401
 
 
 @kinect2kit_server.route("/api/bodyframe", methods=["GET"])
