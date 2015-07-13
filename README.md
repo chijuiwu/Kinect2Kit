@@ -21,7 +21,11 @@ To exit the virtual environment:
 - `(venv) $ deactivate`
 
 #### Client
-The Kinect client is written in C#
+The Kinect client is written in C#. Use Visual Studio to build the project at:
+
+- `$ toolkit\client\csharp\Kinect2KitClient\Kinect2KitClient.sln`
+
+Disclaimer: The client application is based on Body Basics-WPF in the Kinect v2 SDK. I do not own the rights to their code.
 
 ## How to run?
 
@@ -32,7 +36,7 @@ The Kinect client is written in C#
 
 #### Client
 
-
+- `$ toolkit\client\csharp\Kinect2KitClient\Kinect2KitClient\bin\Debug\Kinect2KitClient.exe`
 
 ## Applications
 
