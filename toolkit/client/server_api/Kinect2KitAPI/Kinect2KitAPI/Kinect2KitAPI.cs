@@ -45,12 +45,57 @@ namespace Kinect2KitAPI
 
         public static dynamic StreamBodyFrame(double timestamp, Body[] bodies)
         {
-            return "";
+            string bodyframeJSON = Kinect2KitAPI.GetBodyFrameJSON(timestamp, bodies);
+            var values = new List<KeyValuePair<string, string>>
+            {
+                new KeyValuePair<string, string>("bodyframe", bodyframeJSON)
+            };
+            return Kinect2KitAPI.GetPOSTResponseJSON(Kinect2KitAPI.API_Stream_BodyFrame, values);
         }
 
-        public static string GetBodyFrameJSON(Body[] bodies)
+        public static string GetBodyFrameJSON(double timestamp, Body[] bodies)
         {
-            return "";
+            Kinect2KitBodyFrame toolkitBodyFrame = new Kinect2KitBodyFrame();
+            
+            // Bodies can be untracked.
+            bool containsBodies = false;
+            foreach (Body body in bodies)
+            {
+                if (body.IsTracked)
+                {
+                    containsBodies = true;
+                    Kinect2KitBodyFrame.Kinect2KitBody toolkitBody = new Kinect2KitBodyFrame.Kinect2KitBody();
+                    toolkitBody.TrackingId = body.TrackingId.ToString();
+                    foreach (JointType jt in body.Joints.Keys)
+                    {
+                        Kinect2KitBodyFrame.Kinect2KitJoint toolkitJoint = new Kinect2KitBodyFrame.Kinect2KitJoint();
+                        toolkitJoint.JointType = jt.ToString();
+                        toolkitJoint.TrackingState = body.Joints[jt].TrackingState.ToString();
+
+                        toolkitJoint.Orientation = new Kinect2KitBodyFrame.Kinect2KitJointOrientation();
+                        toolkitJoint.Orientation.w = body.JointOrientations[jt].Orientation.W;
+                        toolkitJoint.Orientation.x = body.JointOrientations[jt].Orientation.X;
+                        toolkitJoint.Orientation.y = body.JointOrientations[jt].Orientation.Y;
+                        toolkitJoint.Orientation.z = body.JointOrientations[jt].Orientation.Z;
+
+                        toolkitJoint.CameraSpacePoint.x = body.Joints[jt].Position.X;
+                        toolkitJoint.CameraSpacePoint.y = body.Joints[jt].Position.Y;
+                        toolkitJoint.CameraSpacePoint.z = body.Joints[jt].Position.Z;
+
+                        toolkitBody.Joints[jt.ToString()] = toolkitJoint;
+                    }
+                    toolkitBodyFrame.Bodies.Add(toolkitBody);
+                }
+            }
+
+            if (containsBodies)
+            {
+                return JsonConvert.SerializeObject(toolkitBodyFrame);
+            }
+            else
+            {
+                return "";
+            }
         }
     }
 }

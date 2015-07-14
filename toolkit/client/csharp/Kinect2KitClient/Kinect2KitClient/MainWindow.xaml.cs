@@ -23,7 +23,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
     /// </summary>
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
-        #region Kinect2Kit
+        #region Kinect2Kit server settings
         private string serverAddress = "localhost";
         private int serverPort = 8000;
         #endregion
@@ -322,6 +322,13 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                     // those body objects will be re-used.
                     bodyFrame.GetAndRefreshBodyData(this.bodies);
                     dataReceived = true;
+
+                    #region Kinect2Kit
+                    //Stream BodyFrame to Kinect2Kit server
+                    double timestamp = bodyFrame.RelativeTime.TotalMilliseconds;
+                    dynamic response = Kinect2KitAPI.StreamBodyFrame(timestamp, this.bodies);
+                    this.StatusText = response.message;
+                    #endregion
                 }
             }
 
@@ -523,6 +530,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         #region Kinect2Kit
         private void Setup_Kinect2Kit_ServerAddress_Click(object sender, RoutedEventArgs e)
         {
+            // TODO
         }
         #endregion
     }
