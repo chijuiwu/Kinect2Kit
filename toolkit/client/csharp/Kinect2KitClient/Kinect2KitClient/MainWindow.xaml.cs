@@ -16,6 +16,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
     using System.Windows.Media;
     using System.Windows.Media.Imaging;
     using Microsoft.Kinect;
+    using Kinect2KitAPI;
 
     /// <summary>
     /// Interaction logic for MainWindow
@@ -522,12 +523,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         #region Kinect2Kit
         private void Setup_Kinect2Kit_ServerAddress_Click(object sender, RoutedEventArgs e)
         {
-            
-        }
-
-        private void PostKinectBodyFrame(Body[] bodies)
-        {
-
         }
         #endregion
     }

@@ -4,16 +4,22 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Net.Http;
-using Newtonsoft.Json;
 using Microsoft.Kinect;
+using Newtonsoft.Json;
 
-namespace Microsoft.Samples.Kinect.BodyBasics
+namespace Kinect2KitAPI
 {
-    class Kinect2KitAPI
+    public class Kinect2KitAPI
     {
         public static string Server_Address { get; set; }
 
-        public static readonly string API_Stream_BodyFrame = "/track/stream";
+        #region RESTful Web APIs
+        public static readonly string API_New_Session = "/session/new";
+        public static readonly string API_Acquire_Calibration = "calibration/acquire";
+        public static readonly string API_Resolve_Calibration = "calibration/resolve";
+        public static readonly string API_Start_Tracking = "/track/start";
+        public static readonly string API_Stream_BodyFrame = "/track/stream";        
+        #endregion
 
         public static string URL_For(string api)
         {
@@ -37,9 +43,14 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             };
         }
 
+        public static dynamic StreamBodyFrame(double timestamp, Body[] bodies)
+        {
+            return "";
+        }
+
         public static string GetBodyFrameJSON(Body[] bodies)
         {
-
+            return "";
         }
     }
 }
