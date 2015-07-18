@@ -536,6 +536,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             if (setup.DialogResult.HasValue && setup.DialogResult.Value)
             {
                 Kinect2KitAPI.Server_Address = "http://" + setup.valServerAddress.Text + ":" + setup.valServerPort.Text;
+                this.btnStartStopStreaming.IsEnabled = true;
             }
         }
 
