@@ -15,7 +15,7 @@ A RESTFul web service for calibrating and tracking with multiple Kinects. Used b
 
 #### Client
 
-- `$ toolkit\client\csharp\Kinect2KitClient\Kinect2KitClient\bin\Release\Kinect2KitClient.exe`
+- `$ toolkit\client\csharp\Kinect2KitClient\bin\AnyCPU\Release\BodyBasics-WPF.exe`
 
 
 ## Dependencies
