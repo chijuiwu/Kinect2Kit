@@ -11,7 +11,9 @@ The calibration procedure is based on 3D coordinate transformation proposed in [
 
 ## Results and papers
 
-You can find my undergraduate thesis titled Tracking people with Multiple Kinects from [here](https://github.com/cjw-charleswu/KinectMultiTrack/blob/master/Deliverables/Report/Final/thesis.pdf). It contains empirical results and disucssion on the proposed tracking algorithm. The current toolkit is an improvement over the software I developed for my thesis. 
+You can find my undergraduate thesis titled Tracking people with Multiple Kinects from [here](https://github.com/cjw-charleswu/KinectMultiTrack/blob/master/Deliverables/Report/Final/thesis.pdf). It contains empirical results and disucssion on the proposed tracking algorithm. I found that the average joint difference* across different scenarios are within personal space (~15cm). The current toolkit is an improvement over the software I developed for my thesis.
+
+*Average joint difference is a person's distance difference between their Kinect skeletons orginally from different FOVs in the same viewing perspective.
 
 ## Limitations
 
