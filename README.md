@@ -20,7 +20,7 @@ A RESTFul web service for calibrating and tracking with multiple Kinects. Used b
 
 ## Dependencies
 #### Server
-The server is written in Python, and all required modules are listed inside `requirements.txt`. Use (virtualenv)[http://docs.python-guide.org/en/latest/dev/virtualenvs/].
+The server is written in Python, and all required modules are listed inside `requirements.txt`. Use [virtualenv](http://docs.python-guide.org/en/latest/dev/virtualenvs/).
 
 - `$ virtualenv venv`
 - `$ source venv/bin/activate`
