@@ -22,7 +22,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         public SetupKinect2KitServerDialog()
         {
             InitializeComponent();
-            this.valServerAddress.Text = "localhost";
+            this.valServerIPAddress.Text = "localhost";
             this.valServerPort.Text = "8000";
         }
 

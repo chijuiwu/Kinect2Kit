@@ -8,37 +8,71 @@ namespace Kinect2KitAPI
 {
     public class Kinect2KitBodyFrame
     {
-        public List<Kinect2KitBody> Bodies = new List<Kinect2KitBody>();
-
-        public class Kinect2KitBody
+        private List<Kinect2KitBody> bodies = new List<Kinect2KitBody>();
+        public List<Kinect2KitBody> Bodies
         {
-            public string TrackingId;
-            public Dictionary<string, Kinect2KitJoint> Joints = new Dictionary<string, Kinect2KitJoint>();
-        }
-
-        public class Kinect2KitJoint
-        {
-            public string JointType;
-            public string TrackingState;
-            public Kinect2KitJointOrientation Orientation;
-            public Kinect2KitJointPosition CameraSpacePoint;
-        }
-
-        public class Kinect2KitJointOrientation
-        {
-            public float w;
-            public float x;
-            public float y;
-            public float z;
-        }
-
-        public class Kinect2KitJointPosition
-        {
-            public float x;
-            public float y;
-            public float z;
+            get
+            {
+                return this.bodies;
+            }
         }
     }
 
+    public class Kinect2KitBody
+    {
+        public string TrackingId { get; set; }
+        private Dictionary<string, Kinect2KitJoint> joints = new Dictionary<string, Kinect2KitJoint>();
+        public Dictionary<string, Kinect2KitJoint> Joints
+        {
+            get
+            {
+                return this.joints;
+            }
+        }
+    }
 
+    public class Kinect2KitJoint
+    {
+        public string JointType { get; set; }
+        public string TrackingState { get; set; }
+        private Kinect2KitJointOrientation orientation = new Kinect2KitJointOrientation();
+        public Kinect2KitJointOrientation Orientation
+        {
+            get
+            {
+                return this.orientation;
+            }
+            set
+            {
+                this.orientation = value;
+            }
+        }
+        private Kinect2KitJointPosition position = new Kinect2KitJointPosition();
+        public Kinect2KitJointPosition CameraSpacePoint
+        {
+            get
+            {
+                return this.position;
+            }
+            set
+            {
+                this.CameraSpacePoint = value;
+            }
+        }
+    }
+
+    public class Kinect2KitJointOrientation
+    {
+        public float w { get; set; }
+        public float x { get; set; }
+        public float y { get; set; }
+        public float z { get; set; }
+    }
+
+    public class Kinect2KitJointPosition
+    {
+        public float x { get; set; }
+        public float y { get; set; }
+        public float z { get; set; }
+    }
 }

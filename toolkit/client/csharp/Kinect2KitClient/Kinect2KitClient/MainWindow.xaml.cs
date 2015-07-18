@@ -323,11 +323,11 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                     dataReceived = true;
 
                     #region Kinect2Kit
-                    if (this.streaming && Kinect2KitAPI.Server_Address_Ready)
+                    if (this.streaming && Kinect2KitAPI.Has_ServerEndpoint)
                     {
                         double timestamp = bodyFrame.RelativeTime.TotalMilliseconds;
-                        dynamic response = Kinect2KitAPI.StreamBodyFrame(timestamp, this.bodies);
-                        this.StatusText = String.Format("Streaming BodyFrame to Kinect2Kit server @ {0}, Response: {1} ", Kinect2KitAPI.Server_Address, response.message);
+                        Kinect2KitAPI.Response resp = Kinect2KitAPI.StreamBodyFrame(timestamp, this.bodies);
+                        this.StatusText = String.Format("Streaming BodyFrame to Kinect2Kit server @ {0}, Response: {1} ", Kinect2KitAPI.ServerEndpoint, resp.ServerMessage);
                     }
                     #endregion
                 }
@@ -535,7 +535,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             setup.ShowDialog();
             if (setup.DialogResult.HasValue && setup.DialogResult.Value)
             {
-                Kinect2KitAPI.Server_Address = "http://" + setup.valServerAddress.Text + ":" + setup.valServerPort.Text;
+                Kinect2KitAPI.SetServerEndpoint(setup.valServerIPAddress.Text, Convert.ToUInt32(setup.valServerPort.Text));
                 this.btnStartStopStreaming.IsEnabled = true;
             }
         }

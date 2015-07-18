@@ -10,7 +10,7 @@
         <Button Grid.Row="0" Content="Cancel" IsCancel="True" BorderThickness="1" HorizontalAlignment="Center" VerticalAlignment="Bottom" Width="74" FontSize="16" Margin="89,0,134,10"/>
         <Label Grid.Row="0" Content="Server IP Address" HorizontalAlignment="Left" Margin="10,10,0,0" VerticalAlignment="Top"/>
         <Label Grid.Row="0" Content="Server Port" HorizontalAlignment="Left" Margin="10,36,0,0" VerticalAlignment="Top"/>
-        <TextBox Grid.Row="0" x:Name="valServerAddress" HorizontalAlignment="Left" Height="23" Margin="112,11,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="172" />
+        <TextBox Grid.Row="0" x:Name="valServerIPAddress" HorizontalAlignment="Left" Height="23" Margin="112,11,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="172" />
         <TextBox Grid.Row="0" x:Name="valServerPort" HorizontalAlignment="Left" Height="23" Margin="112,36,0,0" TextWrapping="Wrap" VerticalAlignment="Top" Width="172"/>
     </Grid>
 </Window>

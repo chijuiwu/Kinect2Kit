@@ -45,6 +45,7 @@
     <Compile Include="Exceptions\Kinect2KitServerNotSetException.cs" />
     <Compile Include="Kinect2KitAPI.cs" />
     <Compile Include="Kinect2KitBodyFrame.cs" />
+    <Compile Include="Kinect2KitSetup.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup />
