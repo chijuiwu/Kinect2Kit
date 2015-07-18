@@ -24,8 +24,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
         #region Kinect2Kit server settings
-        private string serverAddress = "localhost";
-        private int serverPort = 8000;
+        private bool streaming = false;
         #endregion
 
         /// <summary>
@@ -324,10 +323,12 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                     dataReceived = true;
 
                     #region Kinect2Kit
-                    //Stream BodyFrame to Kinect2Kit server
-                    double timestamp = bodyFrame.RelativeTime.TotalMilliseconds;
-                    dynamic response = Kinect2KitAPI.StreamBodyFrame(timestamp, this.bodies);
-                    this.StatusText = response.message;
+                    if (this.streaming && Kinect2KitAPI.Server_Address_Ready)
+                    {
+                        double timestamp = bodyFrame.RelativeTime.TotalMilliseconds;
+                        dynamic response = Kinect2KitAPI.StreamBodyFrame(timestamp, this.bodies);
+                        this.StatusText = String.Format("Streaming BodyFrame to Kinect2Kit server @ {0}, Response: {1} ", Kinect2KitAPI.Server_Address, response.message);
+                    }
                     #endregion
                 }
             }
@@ -530,7 +531,25 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         #region Kinect2Kit
         private void Setup_Kinect2Kit_ServerAddress_Click(object sender, RoutedEventArgs e)
         {
-            // TODO
+            SetupKinect2KitServerDialog setup = new SetupKinect2KitServerDialog();
+            setup.ShowDialog();
+            if (setup.DialogResult.HasValue && setup.DialogResult.Value)
+            {
+                Kinect2KitAPI.Server_Address = "http://" + setup.valServerAddress.Text + ":" + setup.valServerPort.Text;
+            }
+        }
+
+        private void Stream_BodyFrame_Click(object sender, RoutedEventArgs e)
+        {
+            this.streaming = !this.streaming;
+            if (this.streaming)
+            {
+                this.btnStartStopStreaming.Content = "Stop";
+            }
+            else
+            {
+                this.btnStartStopStreaming.Content = "Start";
+            }
         }
         #endregion
     }

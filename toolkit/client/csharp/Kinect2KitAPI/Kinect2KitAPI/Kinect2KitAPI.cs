@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using Microsoft.Kinect;
 using Newtonsoft.Json;
+using Kinect2KitAPI.Exceptions;
 
 namespace Kinect2KitAPI
 {
@@ -18,12 +19,27 @@ namespace Kinect2KitAPI
         public static readonly string API_Acquire_Calibration = "calibration/acquire";
         public static readonly string API_Resolve_Calibration = "calibration/resolve";
         public static readonly string API_Start_Tracking = "/track/start";
-        public static readonly string API_Stream_BodyFrame = "/track/stream";        
+        public static readonly string API_Stream_BodyFrame = "/track/stream";
         #endregion
+
+        public static bool Server_Address_Ready
+        {
+            get
+            {
+                return Kinect2KitAPI.Server_Address != null;
+            }
+        }
 
         public static string URL_For(string api)
         {
-            return Kinect2KitAPI.Server_Address + api;
+            if (!Kinect2KitAPI.Server_Address_Ready)
+            {
+                throw new Kinect2KitServerNotSetException();
+            }
+            else
+            {
+                return Kinect2KitAPI.Server_Address + api;
+            }
         }
 
         public static dynamic GetPOSTResponseJSON(string api)
@@ -34,7 +50,6 @@ namespace Kinect2KitAPI
         public static dynamic GetPOSTResponseJSON(string api, List<KeyValuePair<string, string>> values)
         {
             string url = Kinect2KitAPI.URL_For(api);
-            System.Diagnostics.Debug.WriteLine(url);
             using (var client = new HttpClient())
             {
                 var data = new FormUrlEncodedContent(values);
@@ -56,7 +71,7 @@ namespace Kinect2KitAPI
         public static string GetBodyFrameJSON(double timestamp, Body[] bodies)
         {
             Kinect2KitBodyFrame toolkitBodyFrame = new Kinect2KitBodyFrame();
-            
+
             // Bodies can be untracked.
             bool containsBodies = false;
             foreach (Body body in bodies)
@@ -78,6 +93,7 @@ namespace Kinect2KitAPI
                         toolkitJoint.Orientation.y = body.JointOrientations[jt].Orientation.Y;
                         toolkitJoint.Orientation.z = body.JointOrientations[jt].Orientation.Z;
 
+                        toolkitJoint.CameraSpacePoint = new Kinect2KitBodyFrame.Kinect2KitJointPosition();
                         toolkitJoint.CameraSpacePoint.x = body.Joints[jt].Position.X;
                         toolkitJoint.CameraSpacePoint.y = body.Joints[jt].Position.Y;
                         toolkitJoint.CameraSpacePoint.z = body.Joints[jt].Position.Z;

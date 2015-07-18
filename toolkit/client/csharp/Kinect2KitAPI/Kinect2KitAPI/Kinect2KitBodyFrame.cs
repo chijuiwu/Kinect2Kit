@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Kinect2KitAPI
 {
-    class Kinect2KitBodyFrame
+    public class Kinect2KitBodyFrame
     {
         public List<Kinect2KitBody> Bodies = new List<Kinect2KitBody>();
 

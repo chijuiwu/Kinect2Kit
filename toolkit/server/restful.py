@@ -81,7 +81,7 @@ def stream():
     """
 
     if not kinect2kit_tracker.is_acquiring_calibration() or not kinect2kit_tracker.is_tracking():
-        return jsonify(message="Ignored")
+        return jsonify(message="Ignored, not requiring frames"), 400
     try:
         kinect_addr = request.remote_addr
         bodyframe = json.loads(request.form["bodyframe"])
@@ -90,9 +90,9 @@ def stream():
             kinect2kit_tracker.update_bodyframe(camera, bodyframe)
             return jsonify(message="OK")
         else:
-            return jsonify(message="Kinect not found"), 400
+            return jsonify(message="Ignored, Kinect not requested"), 400
     except KeyError:
-        return jsonify(message="Invalid request"), 400
+        return jsonify(message="Failed, Invalid request"), 400
 
 
 @kinect2kit_server.route("/track/result", methods=["GET"])
