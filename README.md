@@ -3,9 +3,19 @@ A RESTFul web service for calibrating and tracking with multiple Kinects. Used b
 
 ## How does it work?
 
+The calibration procedure is based on 3D coordinate transformation proposed in [Wei et al's paper on Kinect Skeleton Coordinate Calibration for Remote Physical Training](http://www.thinkmind.org/download.php?articleid=mmedia_2014_4_20_50039).
+
 ## Applications
 
 * [Gesture Tracker](https://github.com/cjw-charleswu/GestureTracker)
+
+## Results and papers
+
+You can find my undergraduate thesis titled Tracking people with Multiple Kinects from [here](https://github.com/cjw-charleswu/KinectMultiTrack/blob/master/Deliverables/Report/Final/thesis.pdf). It contains empirical results and disucssion on the proposed tracking algorithm. The current toolkit is an improvement over the software I developed for my thesis. 
+
+## Limitations
+
+The current approach assumes that all Kinects are placed on the same level. It does not work when the Kinects are more than 90 degrees apart, e.g. two Kinects opposite of each other.
 
 ## How to run?
 #### Server
