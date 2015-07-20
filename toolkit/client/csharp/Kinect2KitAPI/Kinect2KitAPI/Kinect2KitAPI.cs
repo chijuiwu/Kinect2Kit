@@ -13,9 +13,29 @@ namespace Kinect2KitAPI
 {
     public class Kinect2KitAPI
     {
+        /// <summary>
+        /// Kinect2Kit server
+        /// </summary>
         public static string ServerIPAddress { get; private set; }
         public static uint ServerPort { get; private set; }
         public static string ServerEndpoint { get; private set; }
+
+        /// <summary>
+        /// Kinect clients
+        /// </summary>
+        private static List<ClientInfo> clientsList = new List<ClientInfo>();
+        public static List<ClientInfo> Clients
+        {
+            get
+            {
+                return Kinect2KitAPI.clientsList;
+            }
+        }
+        public struct ClientInfo
+        {
+            public string Name { get; set; }
+            public string IPAddress { get; set; }
+        }
 
         #region RESTful Web APIs
         public static readonly string API_NewSession = "/session/new";
@@ -30,11 +50,13 @@ namespace Kinect2KitAPI
         public class Response
         {
             public HttpResponseMessage HttpMessage { get; private set; }
+            public bool IsSuccessful { get; private set; }
             public string ServerMessage { get; private set; }
 
             public Response(HttpResponseMessage httpMessage, string serverMessage)
             {
                 this.HttpMessage = httpMessage;
+                this.IsSuccessful = httpMessage.IsSuccessStatusCode;
                 this.ServerMessage = serverMessage;
             }
         }
@@ -62,32 +84,36 @@ namespace Kinect2KitAPI
             Kinect2KitAPI.ServerEndpoint = "http://" + Kinect2KitAPI.ServerIPAddress + ":" + Kinect2KitAPI.ServerPort;
         }
 
+        public static void AddClient(string name, string address)
+        {
+            ClientInfo client = new ClientInfo();
+            client.Name = name;
+            client.IPAddress = address;
+            Kinect2KitAPI.Clients.Add(client);
+        }
+
         /// <summary>
         /// 
         /// </summary>
         /// <param name="setupFilepath"></param>
         /// <returns></returns>
-        public static Response LoadSetup(string setupFilepath)
+        public static void LoadSetup(string setupFilepath)
         {
-            Kinect2KitSetup toolkitSetup = new Kinect2KitSetup();
-
             XDocument setupDoc = XDocument.Load(setupFilepath);
             var root = setupDoc.Element("Kinect2KitSetup");
 
             var server = root.Element("Server");
-            toolkitSetup.ServerAddress = server.Element("Address").Value;
-            toolkitSetup.ServerPort = Convert.ToUInt32(server.Element("Port").Value);
+            string serverIPAddress = server.Element("Address").Value;
+            uint serverPort = Convert.ToUInt32(server.Element("Port").Value);
+            Kinect2KitAPI.SetServerEndpoint(serverIPAddress, serverPort);
 
             var clients = root.Element("Clients");
             foreach (var client in clients.Elements("Client"))
             {
-                Kinect2KitClientSetup toolkitClientSetup = new Kinect2KitClientSetup();
-                toolkitClientSetup.ClientName = client.Element("Name").Value;
-                toolkitClientSetup.ClientAddress = client.Element("Address").Value;
-                toolkitSetup.Clients.Add(toolkitClientSetup);
+                string clientName = client.Element("Name").Value;
+                string clientAddress = client.Element("Address").Value;
+                Kinect2KitAPI.AddClient(clientName, clientAddress);
             }
-
-            return null;
         }
 
         /// <summary>
@@ -97,9 +123,11 @@ namespace Kinect2KitAPI
         /// <returns></returns>
         public static Response StartSession(string name)
         {
+            string clients = JsonConvert.SerializeObject(Kinect2KitAPI.Clients);
             var parameters = new List<KeyValuePair<string, string>>
             {
-                new KeyValuePair<string, string>("name", name)
+                new KeyValuePair<string, string>("name", name),
+                new KeyValuePair<string, string>("clients", clients)
             };
             return Kinect2KitAPI.GetPOSTResponse(Kinect2KitAPI.API_NewSession, parameters);
         }

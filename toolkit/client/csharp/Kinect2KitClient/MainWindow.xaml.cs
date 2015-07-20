@@ -531,11 +531,13 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         #region Kinect2Kit
         private void Setup_Kinect2Kit_ServerAddress_Click(object sender, RoutedEventArgs e)
         {
-            SetupKinect2KitServerDialog setup = new SetupKinect2KitServerDialog();
-            setup.ShowDialog();
-            if (setup.DialogResult.HasValue && setup.DialogResult.Value)
+            SetupKinect2KitServerDialog setupServer = new SetupKinect2KitServerDialog();
+            setupServer.ShowDialog();
+            if (setupServer.DialogResult.HasValue && setupServer.DialogResult.Value)
             {
-                Kinect2KitAPI.SetServerEndpoint(setup.valServerIPAddress.Text, Convert.ToUInt32(setup.valServerPort.Text));
+                string serverAddress = setupServer.entryIPAddress.Text;
+                uint serverPort = Convert.ToUInt32(setupServer.entryPort.Text);
+                Kinect2KitAPI.SetServerEndpoint(serverAddress, serverPort);
                 this.btnStartStopStreaming.IsEnabled = true;
             }
         }

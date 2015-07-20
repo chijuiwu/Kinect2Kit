@@ -12,6 +12,8 @@ def new_session():
     app_addr = request.remote_addr
     try:
         name = request.form["name"]
+        clients = json.loads(request.form["clients"])
+        print clients
         kinect2kit_tracker.set_session(name, app_addr)
         return jsonify(message="OK")
     except KeyError:
