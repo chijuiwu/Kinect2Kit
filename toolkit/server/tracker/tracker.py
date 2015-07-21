@@ -248,6 +248,7 @@ def update_bodyframe(self, camera, bodyframe):
         if self.get_required_calibration_frames() <= 0:
             self.acquiring_calibration = False
             self.calibration_acquired = True
+            self.resolve_calibration()
 
     if self.tracking:
         self._update_skeletons(camera, bodyframe)

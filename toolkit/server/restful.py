@@ -37,7 +37,7 @@ def kill_session():
 @kinect2kit_server.route("/calibration/start", methods=["POST"])
 def start_calibration():
     """
-    Acquire the calibration frames
+    Start acquire calibration frames
     """
 
     app_addr = request.remote_addr
@@ -48,18 +48,9 @@ def start_calibration():
         return jsonify(message="Failed, unauthorized access"), 401
 
 
-@kinect2kit_server.route("/calibration/resolve", methods=["POST"])
-def resolve_calibration():
-    """
-    Run the calibration algorithm
-    """
-
-    app_addr = request.remote_addr
-    if kinect2kit_tracker.authenticate(app_addr):
-        kinect2kit_tracker.resolve_calibration()
-        return jsonify(message="OK")
-    else:
-        return jsonify(message="Failed, unauthorized access"), 401
+@kinect2kit_server.route("/calibration/status", methods=["GET"])
+def get_calibration_status():
+    return jsonify(message="starting...")
 
 
 @kinect2kit_server.route("/track/start", methods=["POST"])

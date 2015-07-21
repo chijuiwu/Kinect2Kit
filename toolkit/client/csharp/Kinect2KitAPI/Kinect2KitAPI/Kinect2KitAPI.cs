@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using System.Net.Http;
 using Microsoft.Kinect;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Kinect2KitAPI.Exceptions;
 using System.Xml.Linq;
 
@@ -63,10 +64,10 @@ namespace Kinect2KitAPI
         {
             public string ServerMessage { get; private set; }
 
-            public ServerSimpleMessage(HttpResponseMessage httpMessage, dynamic serverResponseJSON)
+            public ServerSimpleMessage(HttpResponseMessage httpMessage, string message)
                 : base(httpMessage)
             {
-                this.ServerMessage = serverResponseJSON.message;
+                this.ServerMessage = message;
             }
         }
 
@@ -152,14 +153,14 @@ namespace Kinect2KitAPI
                 new KeyValuePair<string, string>("name", name),
                 new KeyValuePair<string, string>("clients", clients)
             };
-            Tuple<HttpResponseMessage, dynamic> result = await Kinect2KitAPI.POSTAsync(Kinect2KitAPI.API_NewSession, parameters);
-            return new ServerSimpleMessage(result.Item1, result.Item2.message);
+            Tuple<HttpResponseMessage, JToken> result = await Kinect2KitAPI.POSTAsync(Kinect2KitAPI.API_NewSession, parameters);
+            return new ServerSimpleMessage(result.Item1, (string)result.Item2["message"]);
         }
 
         public static async Task<ServerSimpleMessage> StartCalibrationAsync()
         {
-            Tuple<HttpResponseMessage, dynamic> result = await Kinect2KitAPI.POSTAsync(Kinect2KitAPI.API_StartCalibration);
-            return new ServerSimpleMessage(result.Item1, result.Item2.message);
+            Tuple<HttpResponseMessage, JToken> result = await Kinect2KitAPI.POSTAsync(Kinect2KitAPI.API_StartCalibration);
+            return new ServerSimpleMessage(result.Item1, (string)result.Item2["message"]);
         }
 
         public static Response GetCalibrationStatus()
@@ -252,7 +253,7 @@ namespace Kinect2KitAPI
             {
                 HttpResponseMessage httpMessage = await client.GetAsync(url);
                 string content = await httpMessage.Content.ReadAsStringAsync();
-                dynamic serverResponseJSON = JsonConvert.DeserializeObject(content);
+                dynamic serverResponseJSON = JObject.Parse(content);
                 return new Tuple<HttpResponseMessage, dynamic>(httpMessage, serverResponseJSON);
             }
         }
@@ -262,7 +263,7 @@ namespace Kinect2KitAPI
         /// </summary>
         /// <param name="api"></param>
         /// <returns></returns>
-        private static async Task<Tuple<HttpResponseMessage, dynamic>> POSTAsync(string api)
+        private static async Task<Tuple<HttpResponseMessage, JToken>> POSTAsync(string api)
         {
             return await Kinect2KitAPI.POSTAsync(api, Kinect2KitAPI.EmptyParameters);
         }
@@ -273,7 +274,7 @@ namespace Kinect2KitAPI
         /// <param name="api"></param>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        private static async Task<Tuple<HttpResponseMessage, dynamic>> POSTAsync(string api, List<KeyValuePair<string, string>> parameters)
+        private static async Task<Tuple<HttpResponseMessage, JToken>> POSTAsync(string api, List<KeyValuePair<string, string>> parameters)
         {
             string url = Kinect2KitAPI.URL_For(api);
             using (HttpClient client = new HttpClient())
@@ -281,8 +282,8 @@ namespace Kinect2KitAPI
                 FormUrlEncodedContent data = new FormUrlEncodedContent(parameters);
                 HttpResponseMessage httpMessage = await client.PostAsync(url, data);
                 string content = await httpMessage.Content.ReadAsStringAsync();
-                dynamic serverResponseJSON = JsonConvert.DeserializeObject(content);
-                return new Tuple<HttpResponseMessage, dynamic>(httpMessage, serverResponseJSON);
+                JToken serverResponseJSON = JObject.Parse(content);
+                return new Tuple<HttpResponseMessage, JToken>(httpMessage, serverResponseJSON);
             };
         }
         #endregion
