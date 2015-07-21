@@ -6,11 +6,11 @@ from . import result
 
 
 class Tracker(object):
-    def __init__(self, calibration_frames):
-        self.calibration_frames = calibration_frames
+    def __init__(self, calibration_frames_count):
+        self.calibration_frames_count = calibration_frames_count
         self.session = None
         self.kinects_dict = dict()
-        self.acquiring_calibration = False
+        self.acquiring_calibration_frames = False
         self.calibration_acquired = False
         self.calibration_resolved = False
         self.tracking = False
@@ -22,7 +22,7 @@ class Tracker(object):
     def reset(self):
         self.session = None
         self.kinects_dict = dict()
-        self.acquiring_calibration = False
+        self.acquiring_calibration_frames = False
         self.calibration_acquired = False
         self.calibration_resolved = False
         self.tracking = False
@@ -62,24 +62,48 @@ class Tracker(object):
     def is_acquiring_calibration(self):
         return self.acquiring_calibration
 
-    def acquire_calibration(self):
+    def is_resolving_calibration(self):
+        return self.calibration_acquired and not self.calibration_resolved
+
+    def has_finished_calibration(self):
+        return self.calibration_resolved
+
+    def get_required_calibration_frames(self):
+        return self.calibration_frames_count
+
+    def get_remained_calibration_frames(self):
+        """
+        The number of calibration frames remained is the maximum number of bodyframes required for any Kinect
+        """
+
+        remained_frames = 0
+        for camera in self.kinects_dict.itervalues():
+            remaining_frames = self.calibration_frames_count - len(camera.get_bodyframes())
+            if remaining_frames > remained_frames:
+                remained_frames = remaining_frames
+        return remained_frames
+
+    def start_acquiring_calibration_frames(self):
         """
         Start acquiring frames for calibration
         """
 
-        self.acquiring_calibration = True
+        self.acquiring_calibration_frames = True
 
-    def get_required_calibration_frames(self):
+    def resolve_calibration(self):
         """
-        The number of calibration frames still required is the maximum number of bodyframes required for any Kinect
+        Run the calibration procedure on the acquired frames
         """
 
-        required_frames = 0
+        assert self.calibration_acquired
+
+        # calibrate all Kinects
         for camera in self.kinects_dict.itervalues():
-            remaining_frames = self.calibration_frames - len(camera.get_bodyframes())
-            if remaining_frames > required_frames:
-                required_frames = remaining_frames
-        return required_frames
+            self._calibrate_kinect(camera)
+
+        # create initial tracking result
+        self._detect_people(self.last_timestamp)
+        self.calibration_resolved = True
 
     def _calibrate_kinect(self, camera):
         """
@@ -89,7 +113,7 @@ class Tracker(object):
         # use most recent frames for calibration
         uncalibrated_frames = camera.get_uncalibrated_frames()
         calibration_frames = list()
-        while len(calibration_frames) != self.calibration_frames:
+        while len(calibration_frames) != self.calibration_frames_count:
             calibration_frames.append(uncalibrated_frames.pop())
 
         # create a skeleton for each body
@@ -168,95 +192,73 @@ class Tracker(object):
 
             self.result.add_perspective(perspective)
 
+    def start_tracking(self):
+        """
+        Set the tracking flag to be true
+        """
 
-def resolve_calibration(self):
-    """
-    Run the calibration procedure on the acquired frames
-    """
+        assert self.calibration_resolved
+        self.tracking = True
 
-    assert self.calibration_acquired
+    def _update_skeletons(self, camera, bodyframe):
+        """
+        Update skeletons' spatial positions
+        """
 
-    # calibrate all Kinects
-    for camera in self.kinects_dict.itervalues():
-        self._calibrate_kinect(camera)
+        assert self.tracking
 
-    # create initial tracking result
-    self._detect_people(self.last_timestamp)
+        # error handling here, e.g. new skeleton
 
-    self.calibration_resolved = True
+        timestamp = bodyframe["Timestamp"]
+        skeletons = camera.get_skeletons()
 
+        for body_idx in xrange(bodyframe["Bodies"]["Count"]):
+            kinect_body = bodyframe["Bodies"][body_idx]
+            tracking_id = kinect_body["TrackingId"]
 
-def start_tracking(self):
-    """
-    Set the tracking flag to be true
-    """
+            # find skeleton by tracking id
+            s = next((s for s in skeletons if s.get_tracking_id() == tracking_id), None)
+            if s is not None:
+                worldview_body = WorldViewCS.create_body(kinect_body, s.get_init_angle(), s.get_init_center_position())
+                s.update(timestamp, tracking_id, kinect_body, worldview_body)
+                continue
 
-    assert self.calibration_resolved
-    self.tracking = True
+            # find skeleton by spatial proximity
+            other_skeletons = [s for s in skeletons if s.get_last_updated() != timestamp]
+            other_skeletons.sort(
+                key=lambda other: kinect.Kinect.calculate_joints_differences(other.get_kinect_body(), kinect_body))
+            s = next(other_skeletons, None)
+            if s is not None:
+                worldview_body = WorldViewCS.create_body(kinect_body, s.get_init_angle(), s.get_init_center_position())
+                s.update(timestamp, tracking_id, kinect_body, worldview_body)
+                continue
 
+        # other skeletons are not visible
+        lost_track = [s for s in skeletons if s.get_last_updated() != timestamp]
+        for s in lost_track:
+            s.update(timestamp)
 
-def _update_skeletons(self, camera, bodyframe):
-    """
-    Update skeletons' spatial positions
-    """
+    def _update_result(self, timestamp):
+        assert self.tracking
 
-    assert self.tracking
+    def update_bodyframe(self, camera, bodyframe):
+        """
+        Update the tracking result
+        """
 
-    # error handling here, e.g. new skeleton
+        if self.acquiring_calibration_frames:
+            camera.add_uncalibrated_bodyframe(bodyframe)
+            if self.get_required_calibration_frames() <= 0:
+                self.acquiring_calibration_frames = False
+                self.calibration_acquired = True
+                self.resolve_calibration()
 
-    timestamp = bodyframe["Timestamp"]
-    skeletons = camera.get_skeletons()
+        if self.tracking:
+            self._update_skeletons(camera, bodyframe)
+            self._update_result(bodyframe["Timestamp"])
 
-    for body_idx in xrange(bodyframe["Bodies"]["Count"]):
-        kinect_body = bodyframe["Bodies"][body_idx]
-        tracking_id = kinect_body["TrackingId"]
-
-        # find skeleton by tracking id
-        s = next((s for s in skeletons if s.get_tracking_id() == tracking_id), None)
-        if s is not None:
-            worldview_body = WorldViewCS.create_body(kinect_body, s.get_init_angle(), s.get_init_center_position())
-            s.update(timestamp, tracking_id, kinect_body, worldview_body)
-            continue
-
-        # find skeleton by spatial proximity
-        other_skeletons = [s for s in skeletons if s.get_last_updated() != timestamp]
-        other_skeletons.sort(
-            key=lambda other: kinect.Kinect.calculate_joints_differences(other.get_kinect_body(), kinect_body))
-        s = next(other_skeletons, None)
-        if s is not None:
-            worldview_body = WorldViewCS.create_body(kinect_body, s.get_init_angle(), s.get_init_center_position())
-            s.update(timestamp, tracking_id, kinect_body, worldview_body)
-            continue
-
-    # other skeletons are not visible
-    lost_track = [s for s in skeletons if s.get_last_updated() != timestamp]
-    for s in lost_track:
-        s.update(timestamp)
-
-
-def _update_result(self, timestamp):
-    assert self.tracking
-
-
-def update_bodyframe(self, camera, bodyframe):
-    """
-    Update the tracking result
-    """
-
-    if self.acquiring_calibration:
-        camera.add_uncalibrated_bodyframe(bodyframe)
-        if self.get_required_calibration_frames() <= 0:
-            self.acquiring_calibration = False
-            self.calibration_acquired = True
-            self.resolve_calibration()
-
-    if self.tracking:
-        self._update_skeletons(camera, bodyframe)
-        self._update_result(bodyframe["Timestamp"])
-
-
-def get_result(self):
-    return self.result
+    def get_result(self):
+        return self.result
 
 
 def create(*args):

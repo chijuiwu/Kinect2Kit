@@ -13,7 +13,8 @@ def new_session():
     try:
         name = request.form["name"]
         clients = json.loads(request.form["clients"])
-        print clients
+        for client in clients:
+            kinect2kit_tracker.add_kinect(client["Name"], client["IPAddress"])
         kinect2kit_tracker.set_session(name, app_addr)
         return jsonify(message="OK")
     except KeyError:
@@ -37,12 +38,12 @@ def kill_session():
 @kinect2kit_server.route("/calibration/start", methods=["POST"])
 def start_calibration():
     """
-    Start acquire calibration frames
+    Start acquring calibration frames
     """
 
     app_addr = request.remote_addr
     if kinect2kit_tracker.authenticate(app_addr):
-        kinect2kit_tracker.acquire_calibration()
+        kinect2kit_tracker.start_acquiring_calibration()
         return jsonify(message="OK")
     else:
         return jsonify(message="Failed, unauthorized access"), 401
@@ -50,7 +51,16 @@ def start_calibration():
 
 @kinect2kit_server.route("/calibration/status", methods=["GET"])
 def get_calibration_status():
-    return jsonify(message="starting...")
+    """
+    """
+
+    acquring = kinect2kit_tracker.is_acquiring_calibration()
+    required_frames = kinect2kit_tracker.get_required_calibration_frames()
+    remained_frames = kinect2kit_tracker.get_remained_calibration_frames()
+    resolving = kinect2kit_tracker.is_resolving_calibration()
+    finished = kinect2kit_tracker.has_finished_calibration()
+    return jsonify(acquiring=acquring, required_frames=required_frames, remained_frames=remained_frames,
+                   resolving=resolving, finished=finished)
 
 
 @kinect2kit_server.route("/track/start", methods=["POST"])
@@ -115,9 +125,7 @@ def add_kinect():
             addr = request.form["addr"]
             tilt_angle = request.form["tilt_angle"]
             height = request.form["height"]
-            depth_frame_width = request.form["depth_frame_width"]
-            depth_frame_height = request.form["depth_frame_height"]
-            kinect2kit_tracker.add_kinect(name, addr, tilt_angle, height, depth_frame_width, depth_frame_height)
+            kinect2kit_tracker.add_kinect(name, addr, tilt_angle, height)
             return jsonify(message="OK")
         except KeyError:
             return jsonify(message="Failed, invalid request"), 400

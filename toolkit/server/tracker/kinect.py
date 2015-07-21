@@ -3,7 +3,7 @@ import numpy as np
 
 
 class Kinect(object):
-    def __init__(self, name, addr, tilt_angle, height, depth_frame_width, depth_frame_height):
+    def __init__(self, name, addr, tilt_angle=None, height=None, depth_frame_width=None, depth_frame_height=None):
         self.name = name
         self.addr = addr
         self.tilt_angle = tilt_angle

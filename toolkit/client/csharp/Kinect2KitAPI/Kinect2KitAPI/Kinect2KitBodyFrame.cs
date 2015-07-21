@@ -42,10 +42,6 @@ namespace Kinect2KitAPI
             {
                 return this.orientation;
             }
-            set
-            {
-                this.orientation = value;
-            }
         }
         private Kinect2KitJointPosition position = new Kinect2KitJointPosition();
         public Kinect2KitJointPosition CameraSpacePoint
@@ -53,10 +49,6 @@ namespace Kinect2KitAPI
             get
             {
                 return this.position;
-            }
-            set
-            {
-                this.CameraSpacePoint = value;
             }
         }
     }
