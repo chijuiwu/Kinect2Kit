@@ -4,18 +4,21 @@
 // </copyright>
 //------------------------------------------------------------------------------
 
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Globalization;
+using System.IO;
+using System.Windows;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
+using Microsoft.Kinect;
+using Kinect2KitAPI;
+using System.Threading.Tasks;
+
 namespace Microsoft.Samples.Kinect.BodyBasics
 {
-    using System;
-    using System.Collections.Generic;
-    using System.ComponentModel;
-    using System.Diagnostics;
-    using System.Globalization;
-    using System.IO;
-    using System.Windows;
-    using System.Windows.Media;
-    using System.Windows.Media.Imaging;
-    using Microsoft.Kinect;
     using Kinect2KitAPI;
 
     /// <summary>
@@ -306,6 +309,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         private void Reader_FrameArrived(object sender, BodyFrameArrivedEventArgs e)
         {
             bool dataReceived = false;
+            double timestamp = 0; 
 
             using (BodyFrame bodyFrame = e.FrameReference.AcquireFrame())
             {
@@ -321,20 +325,15 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                     // those body objects will be re-used.
                     bodyFrame.GetAndRefreshBodyData(this.bodies);
                     dataReceived = true;
-
-                    #region Kinect2Kit
-                    if (this.streaming && Kinect2KitAPI.Has_ServerEndpoint)
-                    {
-                        double timestamp = bodyFrame.RelativeTime.TotalMilliseconds;
-                        Kinect2KitAPI.Response resp = Kinect2KitAPI.StreamBodyFrame(timestamp, this.bodies);
-                        this.StatusText = String.Format("Streaming BodyFrame to Kinect2Kit server @ {0}, Response: {1} ", Kinect2KitAPI.ServerEndpoint, resp.ServerMessage);
-                    }
-                    #endregion
+                    timestamp = bodyFrame.RelativeTime.TotalMilliseconds;
                 }
             }
 
             if (dataReceived)
             {
+                // Check if there are bodies to be sent to the Kinect2Kit server
+                bool containsTrackedBodies = false;
+
                 using (DrawingContext dc = this.drawingGroup.Open())
                 {
                     // Draw a transparent background to set the render size
@@ -347,6 +346,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
                         if (body.IsTracked)
                         {
+                            containsTrackedBodies = true;
+
                             this.DrawClippedEdges(body, dc);
 
                             IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
@@ -377,6 +378,12 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
                     // prevent drawing outside of our render area
                     this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
+                }
+
+                // Send Kinect BodyFrame to the Kinect2Kit server
+                if (containsTrackedBodies && this.streaming)
+                {
+                    this.SendBodyFrame(timestamp, this.bodies);
                 }
             }
         }
@@ -528,10 +535,18 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                                             : Properties.Resources.SensorNotAvailableStatusText;
         }
 
-        #region Kinect2Kit
+        private async void SendBodyFrame(double timestamp, Body[] bodies)
+        {
+            Kinect2KitSimpleResponse resp = await Kinect2KitAPI.StreamBodyFrame(timestamp, bodies);
+            this.StatusText = String.Format("Streaming BodyFrame(timestamp: {0}) to Kinect2Kit server @ {1}, Response: {2} ", timestamp, Kinect2KitAPI.ServerEndpoint, resp.ServerMessage);
+        }
+
+        #region Kinect2Kit button handles
         private void Setup_Kinect2Kit_ServerAddress_Click(object sender, RoutedEventArgs e)
         {
             SetupKinect2KitServerDialog setupServer = new SetupKinect2KitServerDialog();
+            setupServer.Owner = Application.Current.MainWindow;
+            setupServer.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             setupServer.ShowDialog();
             if (setupServer.DialogResult.HasValue && setupServer.DialogResult.Value)
             {
@@ -539,6 +554,10 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 uint serverPort = Convert.ToUInt32(setupServer.entryPort.Text);
                 Kinect2KitAPI.SetServerEndpoint(serverAddress, serverPort);
                 this.btnStartStopStreaming.IsEnabled = true;
+            }
+            else
+            {
+                this.btnStartStopStreaming.IsEnabled = false;
             }
         }
 
@@ -548,10 +567,13 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             if (this.streaming)
             {
                 this.btnStartStopStreaming.Content = "Stop";
+                // server setup
+                this.btnSetupKinect2KitServer.IsEnabled = false;
             }
             else
             {
                 this.btnStartStopStreaming.Content = "Start";
+                this.btnSetupKinect2KitServer.IsEnabled = true;
             }
         }
         #endregion

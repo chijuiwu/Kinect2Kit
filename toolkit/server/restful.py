@@ -43,7 +43,7 @@ def start_calibration():
 
     app_addr = request.remote_addr
     if kinect2kit_tracker.authenticate(app_addr):
-        kinect2kit_tracker.start_acquiring_calibration()
+        kinect2kit_tracker.start_acquiring_calibration_frames()
         return jsonify(message="OK")
     else:
         return jsonify(message="Failed, unauthorized access"), 401
@@ -77,27 +77,6 @@ def track():
         return jsonify(message="Failed, unauthorized access"), 401
 
 
-@kinect2kit_server.route("/track/stream", methods=["POST"])
-def stream():
-    """
-    Stream the latest Kinect output frames to the server, including BodyFrame.
-    """
-
-    if not kinect2kit_tracker.is_acquiring_calibration() or not kinect2kit_tracker.is_tracking():
-        return jsonify(message="Ignored, not requiring frames"), 400
-    try:
-        kinect_addr = request.remote_addr
-        bodyframe = json.loads(request.form["bodyframe"])
-        camera = kinect2kit_tracker.get_kinect(kinect_addr)
-        if camera is not None:
-            kinect2kit_tracker.update_bodyframe(camera, bodyframe)
-            return jsonify(message="OK")
-        else:
-            return jsonify(message="Ignored, Kinect not requested"), 400
-    except KeyError:
-        return jsonify(message="Failed, Invalid request"), 400
-
-
 @kinect2kit_server.route("/track/result", methods=["GET"])
 def get_result():
     """
@@ -110,6 +89,27 @@ def get_result():
         return jsonify(result="result")
     else:
         return jsonify(message="Failed, unauthorized access"), 401
+
+
+@kinect2kit_server.route("/bodyframe/stream", methods=["POST"])
+def stream_bodyframe():
+    """
+    Receive a Kinect BodyFrame from a client
+    """
+
+    if not kinect2kit_tracker.is_acquiring_calibration() and not kinect2kit_tracker.is_tracking():
+        return jsonify(message="Ignored, Server does not require frames"), 400
+    try:
+        kinect_addr = request.remote_addr
+        bodyframe = json.loads(request.form["bodyframe"])
+        camera = kinect2kit_tracker.get_kinect(kinect_addr)
+        if camera is not None:
+            kinect2kit_tracker.update_bodyframe(camera, bodyframe)
+            return jsonify(message="OK")
+        else:
+            return jsonify(message="Ignored, Server does not recognize the client"), 400
+    except KeyError:
+        return jsonify(message="Failed, Invalid request"), 400
 
 
 @kinect2kit_server.route("/kinect/add", methods=["POST"])

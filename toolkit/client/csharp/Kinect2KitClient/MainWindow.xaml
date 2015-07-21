@@ -18,8 +18,8 @@
         </Grid.RowDefinitions>
 
         <Image Grid.Row="0" Source="Images\Logo.png" HorizontalAlignment="Left" Stretch="Fill" Height="32" Width="81" Margin="0 10 0 5" />
-        <Button Grid.Row="0" x:Name="btnSetupKinect2KitServer" HorizontalAlignment="Left" VerticalAlignment="Bottom" Content="Kinect2Kit Server" Margin="96,0,0,10" FontWeight="Bold" Click="Setup_Kinect2Kit_ServerAddress_Click" FontSize="16" Padding="5"/>
-        <Button Grid.Row="0" IsEnabled="False" x:Name="btnStartStopStreaming" HorizontalAlignment="Left" VerticalAlignment="Bottom" Content="Start" Margin="243,0,0,10" FontWeight="Bold" Click="Stream_BodyFrame_Click" RenderTransformOrigin="3.041,0.514" FontSize="16" Padding="5"/>
+        <Button Grid.Row="0" x:Name="btnSetupKinect2KitServer" HorizontalAlignment="Left" VerticalAlignment="Bottom" Content="Kinect2Kit Server" Margin="96,0,0,10" Click="Setup_Kinect2Kit_ServerAddress_Click" Padding="5"/>
+        <Button Grid.Row="0" IsEnabled="False" x:Name="btnStartStopStreaming" HorizontalAlignment="Left" VerticalAlignment="Bottom" Content="Start" Margin="202,0,0,10" Click="Stream_BodyFrame_Click" RenderTransformOrigin="3.041,0.514" Padding="5"/>
         <TextBlock Grid.Row="0" Margin="0 0 -1 0" HorizontalAlignment="Right" VerticalAlignment="Bottom" Foreground="{StaticResource MediumGreyBrush}" FontFamily="Segoe UI" FontSize="18">Body Basics</TextBlock>
         <Image Grid.Row="0" Source="Images\Status.png" Stretch="None" HorizontalAlignment="Center" Margin="0 0 0 5" />
 

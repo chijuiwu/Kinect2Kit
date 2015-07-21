@@ -8,6 +8,8 @@ namespace Kinect2KitAPI
 {
     public class Kinect2KitBodyFrame
     {
+        public double Timestamp { get; private set; }
+
         private List<Kinect2KitBody> bodies = new List<Kinect2KitBody>();
         public List<Kinect2KitBody> Bodies
         {
@@ -16,11 +18,16 @@ namespace Kinect2KitAPI
                 return this.bodies;
             }
         }
+
+        public Kinect2KitBodyFrame(double timestamp)
+        {
+            this.Timestamp = timestamp;
+        }
     }
 
     public class Kinect2KitBody
     {
-        public string TrackingId { get; set; }
+        public string TrackingId { get; private set; }
         private Dictionary<string, Kinect2KitJoint> joints = new Dictionary<string, Kinect2KitJoint>();
         public Dictionary<string, Kinect2KitJoint> Joints
         {
@@ -28,6 +35,11 @@ namespace Kinect2KitAPI
             {
                 return this.joints;
             }
+        }
+
+        public Kinect2KitBody(string trackingId)
+        {
+            this.TrackingId = trackingId;
         }
     }
 

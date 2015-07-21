@@ -49,8 +49,9 @@
     <SignAssembly>false</SignAssembly>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Kinect2KitAPI">
-      <HintPath>..\..\Kinect2KitAPI\Kinect2KitAPI\bin\Release\Kinect2KitAPI.dll</HintPath>
+    <Reference Include="Kinect2KitAPI, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\Kinect2KitAPI\Kinect2KitAPI\bin\Release\Kinect2KitAPI.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Kinect">
       <HintPath>$(KINECTSDK20_DIR)Assemblies\Microsoft.Kinect.dll</HintPath>

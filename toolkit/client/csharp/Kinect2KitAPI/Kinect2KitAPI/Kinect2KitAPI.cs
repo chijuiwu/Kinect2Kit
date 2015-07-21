@@ -38,7 +38,8 @@ namespace Kinect2KitAPI
         public static readonly string API_StartCalibration = "/calibration/start";
         public static readonly string API_CalibrationStatus = "/calibration/status";
         public static readonly string API_StartTracking = "/track/start";
-        public static readonly string API_StreamBodyFrame = "/track/stream";
+        public static readonly string API_TrackingResult = "/track/result";
+        public static readonly string API_StreamBodyFrame = "/bodyframe/stream";
         #endregion
 
         private static readonly List<KeyValuePair<string, string>> EmptyParameters = new List<KeyValuePair<string, string>>();
@@ -138,29 +139,26 @@ namespace Kinect2KitAPI
         /// <param name="timestamp"></param>
         /// <param name="bodies"></param>
         /// <returns></returns>
-        public static dynamic StreamBodyFrame(double timestamp, Body[] bodies)
+        public static async Task<Kinect2KitSimpleResponse> StreamBodyFrame(double timestamp, Body[] bodies)
         {
-            var values = new List<KeyValuePair<string, string>>
+            var parameters = new List<KeyValuePair<string, string>>
             {
                 new KeyValuePair<string, string>("bodyframe", Kinect2KitAPI.GetBodyFrameJSON(timestamp, bodies))
             };
-            return Kinect2KitAPI.POSTAsync(Kinect2KitAPI.API_StreamBodyFrame, values);
+            Tuple<HttpResponseMessage, JToken> result = await Kinect2KitAPI.POSTAsync(Kinect2KitAPI.API_StreamBodyFrame, parameters);
+            return new Kinect2KitSimpleResponse(result.Item1, (string)result.Item2["message"]);
         }
         #endregion
 
         private static string GetBodyFrameJSON(double timestamp, Body[] bodies)
         {
-            Kinect2KitBodyFrame toolkitBodyFrame = new Kinect2KitBodyFrame();
+            Kinect2KitBodyFrame toolkitBodyFrame = new Kinect2KitBodyFrame(timestamp);
 
-            // Bodies can be not tracked.
-            bool containsBodies = false;
             foreach (Body body in bodies)
             {
                 if (body.IsTracked)
                 {
-                    containsBodies = true;
-                    Kinect2KitBody toolkitBody = new Kinect2KitBody();
-                    toolkitBody.TrackingId = body.TrackingId.ToString();
+                    Kinect2KitBody toolkitBody = new Kinect2KitBody(body.TrackingId.ToString());
                     foreach (JointType jt in body.Joints.Keys)
                     {
                         Kinect2KitJoint toolkitJoint = new Kinect2KitJoint();
@@ -181,14 +179,7 @@ namespace Kinect2KitAPI
                     toolkitBodyFrame.Bodies.Add(toolkitBody);
                 }
             }
-            if (containsBodies)
-            {
-                return JsonConvert.SerializeObject(toolkitBodyFrame);
-            }
-            else
-            {
-                return "";
-            }
+            return JsonConvert.SerializeObject(toolkitBodyFrame);
         }
 
         #region HTTP GET, POST for APIs

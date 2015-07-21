@@ -43,8 +43,8 @@ class Tracker(object):
         else:
             return False
 
-    def add_kinect(self, name, addr, tilt_angle, height, depth_frame_width, depth_frame_height):
-        k = kinect.create(name, addr, tilt_angle, height, depth_frame_width, depth_frame_height)
+    def add_kinect(self, name, addr, tilt_angle=None, height=None):
+        k = kinect.create(name, addr, tilt_angle, height)
         self.kinects_dict[addr] = k
 
     def get_kinect(self, addr):
@@ -60,7 +60,7 @@ class Tracker(object):
         return self.tracking
 
     def is_acquiring_calibration(self):
-        return self.acquiring_calibration
+        return self.acquiring_calibration_frames
 
     def is_resolving_calibration(self):
         return self.calibration_acquired and not self.calibration_resolved
@@ -78,7 +78,7 @@ class Tracker(object):
 
         remained_frames = 0
         for camera in self.kinects_dict.itervalues():
-            remaining_frames = self.calibration_frames_count - len(camera.get_bodyframes())
+            remaining_frames = self.calibration_frames_count - len(camera.get_uncalibrated_bodyframes())
             if remaining_frames > remained_frames:
                 remained_frames = remaining_frames
         return remained_frames
@@ -87,7 +87,6 @@ class Tracker(object):
         """
         Start acquiring frames for calibration
         """
-
         self.acquiring_calibration_frames = True
 
     def resolve_calibration(self):
@@ -111,7 +110,7 @@ class Tracker(object):
         """
 
         # use most recent frames for calibration
-        uncalibrated_frames = camera.get_uncalibrated_frames()
+        uncalibrated_frames = camera.get_uncalibrated_bodyframes()
         calibration_frames = list()
         while len(calibration_frames) != self.calibration_frames_count:
             calibration_frames.append(uncalibrated_frames.pop())
@@ -119,7 +118,7 @@ class Tracker(object):
         # create a skeleton for each body
         last_frame = calibration_frames[-1]
         timestamp = last_frame["Timestamp"]
-        bodies_count = last_frame["Bodies"]["Count"]
+        bodies_count = len(last_frame["Bodies"])
         for body_idx in xrange(bodies_count):
             skeletons = list()
             for frame_idx in xrange(len(calibration_frames)):
@@ -147,21 +146,21 @@ class Tracker(object):
         self.result = result.create_result(timestamp)
 
         # find all skeletons in worldview
-        worldview_skeletons = list()
+        worldview_skeletons_list = list()
         for camera in self.kinects_dict.itervalues():
             for s in camera.get_skeletons():
-                worldview_skeletons.append((camera, s))
+                worldview_skeletons_list.append((camera, s))
 
         # match skeletons by their spatial position in worldview
         skeletons_matches_list = list()
         for person_idx in xrange(self.people_count):
-            first_skeleton_worldview = worldview_skeletons[0].get_worldview_body()
-            worldview_skeletons.sort(
-                key=lambda c, s: WorldViewCS.calculate_joints_differences(s.get_worldview_body(),
-                                                                          first_skeleton_worldview))
+            first_skeleton_worldview = worldview_skeletons_list[0][1].get_worldview_body()
+            worldview_skeletons_list.sort(
+                key=lambda (c, s): WorldViewCS.calculate_joints_differences(s.get_worldview_body(),
+                                                                            first_skeleton_worldview))
             same_person_skeletons_list = list()
             for pair_idx in xrange(self.people_count):
-                same_person_skeletons_list.append(worldview_skeletons.pop(0))
+                same_person_skeletons_list.append(worldview_skeletons_list.pop(0))
             skeletons_matches_list.append(same_person_skeletons_list)
 
         # create multiple perspectives
@@ -248,9 +247,10 @@ class Tracker(object):
 
         if self.acquiring_calibration_frames:
             camera.add_uncalibrated_bodyframe(bodyframe)
-            if self.get_required_calibration_frames() <= 0:
+            if self.get_remained_calibration_frames() <= 0:
                 self.acquiring_calibration_frames = False
                 self.calibration_acquired = True
+                # should start this in a separate thread
                 self.resolve_calibration()
 
         if self.tracking:

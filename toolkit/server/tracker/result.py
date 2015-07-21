@@ -7,7 +7,7 @@ class Result(object):
         return self.timestamp
 
     def add_perspective(self, perspective):
-        self.perspectives_dict[perspective.get_namme()] = perspective
+        self.perspectives_dict[perspective.get_name()] = perspective
 
     def get_perspectives(self):
         return self.perspectives_dict

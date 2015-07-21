@@ -3,13 +3,11 @@ import numpy as np
 
 
 class Kinect(object):
-    def __init__(self, name, addr, tilt_angle=None, height=None, depth_frame_width=None, depth_frame_height=None):
+    def __init__(self, name, addr, tilt_angle=None, height=None):
         self.name = name
         self.addr = addr
         self.tilt_angle = tilt_angle
         self.height = height
-        self.depth_frame_width = depth_frame_width
-        self.depth_frame_height = depth_frame_height
         self.uncalibrated_bodyframes_list = list()
         self.skeletons_list = list()
 
