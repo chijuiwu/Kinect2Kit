@@ -39,8 +39,8 @@ namespace Kinect2KitAPI
 
         #region RESTful Web APIs
         public static readonly string API_NewSession = "/session/new";
-        public static readonly string API_AcquireCalibration = "/calibration/acquire";
-        public static readonly string API_ResolveCalibration = "/calibration/resolve";
+        public static readonly string API_StartCalibration = "/calibration/start";
+        public static readonly string API_CalibrationStatus = "/calibration/status";
         public static readonly string API_StartTracking = "/track/start";
         public static readonly string API_StreamBodyFrame = "/track/stream";
         #endregion
@@ -51,13 +51,36 @@ namespace Kinect2KitAPI
         {
             public HttpResponseMessage HttpMessage { get; private set; }
             public bool IsSuccessful { get; private set; }
-            public string ServerMessage { get; private set; }
 
-            public Response(HttpResponseMessage httpMessage, string serverMessage)
+            public Response(HttpResponseMessage httpMessage)
             {
                 this.HttpMessage = httpMessage;
                 this.IsSuccessful = httpMessage.IsSuccessStatusCode;
-                this.ServerMessage = serverMessage;
+            }
+        }
+
+        public class ServerSimpleMessage : Response
+        {
+            public string ServerMessage { get; private set; }
+
+            public ServerSimpleMessage(HttpResponseMessage httpMessage, dynamic serverResponseJSON)
+                : base(httpMessage)
+            {
+                this.ServerMessage = serverResponseJSON.message;
+            }
+        }
+
+        public class ServerCalibrationMessage : Response
+        {
+            public bool AcquiringCalibrationFrames { get; private set; }
+            public int RequiredCalibrationFrames { get; private set; }
+            public int RemainCalibrationFrames { get; private set; }
+            public bool ResolvingCalibrationFrames { get; private set; }
+
+            public ServerCalibrationMessage(HttpResponseMessage httpMessage, dynamic serverResponseJSON)
+                : base(httpMessage)
+            {
+
             }
         }
 
@@ -121,7 +144,7 @@ namespace Kinect2KitAPI
         /// </summary>
         /// <param name="name"></param>
         /// <returns></returns>
-        public static Response StartSession(string name)
+        public static async Task<ServerSimpleMessage> StartSessionAsync(string name)
         {
             string clients = JsonConvert.SerializeObject(Kinect2KitAPI.Clients);
             var parameters = new List<KeyValuePair<string, string>>
@@ -129,7 +152,20 @@ namespace Kinect2KitAPI
                 new KeyValuePair<string, string>("name", name),
                 new KeyValuePair<string, string>("clients", clients)
             };
-            return Kinect2KitAPI.GetPOSTResponse(Kinect2KitAPI.API_NewSession, parameters);
+            Tuple<HttpResponseMessage, dynamic> result = await Kinect2KitAPI.POSTAsync(Kinect2KitAPI.API_NewSession, parameters);
+            return new ServerSimpleMessage(result.Item1, result.Item2.message);
+        }
+
+        public static async Task<ServerSimpleMessage> StartCalibrationAsync()
+        {
+            Tuple<HttpResponseMessage, dynamic> result = await Kinect2KitAPI.POSTAsync(Kinect2KitAPI.API_StartCalibration);
+            return new ServerSimpleMessage(result.Item1, result.Item2.message);
+        }
+
+        public static Response GetCalibrationStatus()
+        {
+            //return Kinect2KitAPI.POSTAsync(Kinect2KitAPI.API_CalibrationStatus, Kinect2KitAPI.EmptyParameters);
+            return null;
         }
 
         /// <summary>
@@ -144,7 +180,7 @@ namespace Kinect2KitAPI
             {
                 new KeyValuePair<string, string>("bodyframe", Kinect2KitAPI.GetBodyFrameJSON(timestamp, bodies))
             };
-            return Kinect2KitAPI.GetPOSTResponse(Kinect2KitAPI.API_StreamBodyFrame, values);
+            return Kinect2KitAPI.POSTAsync(Kinect2KitAPI.API_StreamBodyFrame, values);
         }
         #endregion
 
@@ -204,21 +240,49 @@ namespace Kinect2KitAPI
             }
         }
 
-        private static Response GetPOSTResponse(string api)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="api"></param>
+        /// <returns></returns>
+        private static async Task<Tuple<HttpResponseMessage, dynamic>> GETAsync(string api)
         {
-            return Kinect2KitAPI.GetPOSTResponse(api, Kinect2KitAPI.EmptyParameters);
+            string url = Kinect2KitAPI.URL_For(api);
+            using (HttpClient client = new HttpClient())
+            {
+                HttpResponseMessage httpMessage = await client.GetAsync(url);
+                string content = await httpMessage.Content.ReadAsStringAsync();
+                dynamic serverResponseJSON = JsonConvert.DeserializeObject(content);
+                return new Tuple<HttpResponseMessage, dynamic>(httpMessage, serverResponseJSON);
+            }
         }
 
-        private static Response GetPOSTResponse(string api, List<KeyValuePair<string, string>> parameters)
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="api"></param>
+        /// <returns></returns>
+        private static async Task<Tuple<HttpResponseMessage, dynamic>> POSTAsync(string api)
+        {
+            return await Kinect2KitAPI.POSTAsync(api, Kinect2KitAPI.EmptyParameters);
+        }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="api"></param>
+        /// <param name="parameters"></param>
+        /// <returns></returns>
+        private static async Task<Tuple<HttpResponseMessage, dynamic>> POSTAsync(string api, List<KeyValuePair<string, string>> parameters)
         {
             string url = Kinect2KitAPI.URL_For(api);
             using (HttpClient client = new HttpClient())
             {
                 FormUrlEncodedContent data = new FormUrlEncodedContent(parameters);
-                HttpResponseMessage httpMessage = client.PostAsync(url, data).Result;
-                dynamic serverResponse = JsonConvert.DeserializeObject(httpMessage.Content.ReadAsStringAsync().Result);
-                string serverMessage = serverResponse.message;
-                return new Response(httpMessage, serverMessage);
+                HttpResponseMessage httpMessage = await client.PostAsync(url, data);
+                string content = await httpMessage.Content.ReadAsStringAsync();
+                dynamic serverResponseJSON = JsonConvert.DeserializeObject(content);
+                return new Tuple<HttpResponseMessage, dynamic>(httpMessage, serverResponseJSON);
             };
         }
         #endregion

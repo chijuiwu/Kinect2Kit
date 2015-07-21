@@ -34,8 +34,8 @@ def kill_session():
         return jsonify(message="Failed, unauthorized access"), 401
 
 
-@kinect2kit_server.route("/calibration/acquire", methods=["POST"])
-def acquire_calibration():
+@kinect2kit_server.route("/calibration/start", methods=["POST"])
+def start_calibration():
     """
     Acquire the calibration frames
     """
