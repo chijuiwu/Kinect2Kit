@@ -165,27 +165,23 @@ class Tracker(object):
 
         # create multiple perspectives
         for camera in self.kinects_dict.itervalues():
-            perspective = result.create_perspective(camera.get_name(), camera.get_addr())
+            camera_name = camera.get_name()
+            camera_addr = camera.get_addr()
+            perspective = result.create_perspective(camera_name, camera_addr)
 
             for same_person_skeletons_list in skeletons_matches_list:
                 person = result.create_person()
 
                 # find the person's skeleton inside this FOV
                 skeleton_in_camera = next(s for c, s in same_person_skeletons_list if c.get_addr() == camera.get_addr())
-                joints_dict = dict()
-                for joint_type, joint in skeleton_in_camera.get_kinect_body()["Joints"].iteritems():
-                    joints_dict[joint_type] = result.create_joint(joint_type, joint["CameraSpacePoint"])
-                person.add_skeleton(False, camera.get_name(), camera.get_addr(), joints_dict)
+                person.add_skeleton(True, camera_name, camera_addr, skeleton_in_camera.get_kinect_body()["Joints"])
 
-                for c, s in same_person_skeletons_list:
-                    if c.get_addr() != camera.get_addr():
+                for (c, s) in same_person_skeletons_list:
+                    if c.get_addr() != camera_addr:
                         kinect_body = kinect.Kinect.create_body(s.get_worldview_body(),
                                                                 skeleton_in_camera.get_init_angle(),
                                                                 skeleton_in_camera.get_init_center_position())
-                        joints_dict = dict()
-                        for joint_type, joint in kinect_body["Joints"].iteritems():
-                            joints_dict[joint_type] = result.create_joint(joint_type, joint["CameraSpacePoint"])
-                        person.add_skeleton(True, c.get_name(), c.get_addr(), joints_dict)
+                        person.add_skeleton(False, c.get_name(), c.get_addr(), kinect_body["Joints"])
 
                 perspective.add_person(person)
 
@@ -211,7 +207,7 @@ class Tracker(object):
         timestamp = bodyframe["Timestamp"]
         skeletons = camera.get_skeletons()
 
-        for body_idx in xrange(bodyframe["Bodies"]["Count"]):
+        for body_idx in xrange(len(bodyframe["Bodies"])):
             kinect_body = bodyframe["Bodies"][body_idx]
             tracking_id = kinect_body["TrackingId"]
 

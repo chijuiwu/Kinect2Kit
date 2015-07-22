@@ -133,6 +133,18 @@ namespace Kinect2KitAPI
             return new Kinect2KitCalibrationResponse(result.Item1, acquiring, requiredFrames, remainedFrames, resolving, finished);
         }
 
+        public static async Task<Kinect2KitSimpleResponse> StartTrackingAsync()
+        {
+            Tuple<HttpResponseMessage, JToken> result = await Kinect2KitAPI.POSTAsync(Kinect2KitAPI.API_StartTracking);
+            return new Kinect2KitSimpleResponse(result.Item1, (string)result.Item2["message"]);
+        }
+
+        public static async Task<Kinect2KitTrackingResponse> GetTrackingResult()
+        {
+            Tuple<HttpResponseMessage, JToken> result = await Kinect2KitAPI.GETAsync(Kinect2KitAPI.API_TrackingResult);
+            return new Kinect2KitTrackingResponse(result.Item1);
+        }
+
         /// <summary>
         /// 
         /// </summary>

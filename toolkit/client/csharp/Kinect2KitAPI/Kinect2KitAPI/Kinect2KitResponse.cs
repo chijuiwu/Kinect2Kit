@@ -9,12 +9,10 @@ namespace Kinect2KitAPI
 {
     public abstract class Kinect2KitServerResponse
     {
-        public HttpResponseMessage HttpMessage { get; private set; }
         public bool IsSuccessful { get; private set; }
 
         public Kinect2KitServerResponse(HttpResponseMessage httpMessage)
         {
-            this.HttpMessage = httpMessage;
             this.IsSuccessful = httpMessage.IsSuccessStatusCode;
         }
     }
@@ -46,6 +44,15 @@ namespace Kinect2KitAPI
             this.RemainedFrames = remainFrames;
             this.ResolvingFrames = resolving;
             this.Finished = finished;
+        }
+    }
+
+    public class Kinect2KitTrackingResponse : Kinect2KitServerResponse
+    {
+
+        public Kinect2KitTrackingResponse(HttpResponseMessage httpMessage) : base(httpMessage)
+        {
+
         }
     }
 }

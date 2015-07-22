@@ -1,3 +1,6 @@
+import json
+
+
 class Result(object):
     def __init__(self, timestamp):
         self.timestamp = timestamp
@@ -11,6 +14,26 @@ class Result(object):
 
     def get_perspectives(self):
         return self.perspectives_dict
+
+    def to_dict(self):
+        result_vars = dict()
+        result_vars["Timestamp"] = self.timestamp
+        result_vars["Perspectives"] = dict()
+
+        for perspective in self.perspectives_dict.itervalues():
+            perspective_vars = dict()
+            perspective_vars["Name"] = perspective.get_name()
+            perspective_vars["IPAddress"] = perspective.get_addr()
+            perspective_vars["People"] = list()
+
+            for person in perspective.get_people():
+                person_vars = dict()
+                person_vars["Skeletons"] = person.get_skeletons()
+                perspective_vars["People"].append(person_vars)
+
+            result_vars["Perspectives"][perspective_vars["Name"]] = perspective_vars
+
+        return result_vars
 
 
 def create_result(*args):
@@ -44,12 +67,12 @@ class Person(object):
     def __init__(self):
         self.skeletons_dict = dict()
 
-    def add_skeleton(self, is_transformed, kinect_name, kinect_addr, joints_dict):
-        self.skeletons_dict[kinect_addr] = {
-            "is_transformed": is_transformed,
-            "kinect_name": kinect_name,
-            "kinect_addr": kinect_addr,
-            "joints": joints_dict
+    def add_skeleton(self, is_original, kinect_name, kinect_addr, joints_dict):
+        self.skeletons_dict[kinect_name] = {
+            "Original": is_original,
+            "KinectName": kinect_name,
+            "KinectIPAddress": kinect_addr,
+            "Joints": joints_dict
         }
 
     def get_skeletons(self):
@@ -58,19 +81,3 @@ class Person(object):
 
 def create_person():
     return Person()
-
-
-class Joint(object):
-    def __init__(self, joint_type, kinect_coordinate):
-        self.joint_type = joint_type
-        self.kinect_coordinate = kinect_coordinate
-
-    def get_joint_type(self):
-        return self.joint_type
-
-    def get_kinect_coordinate(self):
-        return self.kinect_coordinate
-
-
-def create_joint(*args):
-    return Joint(*args)

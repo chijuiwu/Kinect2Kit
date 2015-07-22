@@ -18,7 +18,7 @@ def new_session():
         kinect2kit_tracker.set_session(name, app_addr)
         return jsonify(message="OK")
     except KeyError:
-        return jsonify(message="Failed, invalid request"), 400
+        return jsonify(message="Failed, Invalid request"), 400
 
 
 @kinect2kit_server.route("/session/kill", methods=["POST"])
@@ -32,7 +32,7 @@ def kill_session():
         kinect2kit_tracker.kill_session()
         return jsonify(message="OK")
     else:
-        return jsonify(message="Failed, unauthorized access"), 401
+        return jsonify(message="Failed, Unauthorized access"), 401
 
 
 @kinect2kit_server.route("/calibration/start", methods=["POST"])
@@ -46,12 +46,13 @@ def start_calibration():
         kinect2kit_tracker.start_acquiring_calibration_frames()
         return jsonify(message="OK")
     else:
-        return jsonify(message="Failed, unauthorized access"), 401
+        return jsonify(message="Failed, Unauthorized access"), 401
 
 
 @kinect2kit_server.route("/calibration/status", methods=["GET"])
 def get_calibration_status():
     """
+    Get the current progress of calibration
     """
 
     acquring = kinect2kit_tracker.is_acquiring_calibration()
@@ -74,7 +75,7 @@ def track():
         kinect2kit_tracker.start_tracking()
         return jsonify(message="OK")
     else:
-        return jsonify(message="Failed, unauthorized access"), 401
+        return jsonify(message="Failed, Unauthorized access"), 401
 
 
 @kinect2kit_server.route("/track/result", methods=["GET"])
@@ -85,16 +86,16 @@ def get_result():
 
     app_addr = request.remote_addr
     if kinect2kit_tracker.authenticate(app_addr):
-        # get result
-        return jsonify(result="result")
+        result = kinect2kit_tracker.get_result()
+        return jsonify(result=result.to_dict())
     else:
-        return jsonify(message="Failed, unauthorized access"), 401
+        return jsonify(message="Failed, Unauthorized access"), 401
 
 
 @kinect2kit_server.route("/bodyframe/stream", methods=["POST"])
 def stream_bodyframe():
     """
-    Receive a Kinect BodyFrame from a client
+    Send a Kinect BodyFrame to the server
     """
 
     if not kinect2kit_tracker.is_acquiring_calibration() and not kinect2kit_tracker.is_tracking():
@@ -128,7 +129,7 @@ def add_kinect():
             kinect2kit_tracker.add_kinect(name, addr, tilt_angle, height)
             return jsonify(message="OK")
         except KeyError:
-            return jsonify(message="Failed, invalid request"), 400
+            return jsonify(message="Failed, Invalid request"), 400
     else:
         return jsonify(message="Failed, unauthorized access"), 401
 
@@ -149,9 +150,9 @@ def remove_kinect():
             else:
                 return jsonify(message="Failed, unauthorized access"), 401
         except KeyError:
-            return jsonify(message="Failed, invalid request"), 400
+            return jsonify(message="Failed, Invalid request"), 400
     else:
-        return jsonify(message="Failed, unauthorized access"), 401
+        return jsonify(message="Failed, Unauthorized access"), 401
 
 
 @kinect2kit_server.route("/api/bodyframe", methods=["GET"])

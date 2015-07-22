@@ -50,25 +50,49 @@ class WorldViewCoordinateSystem:
         center_x = total_body_x / float(skeletons_count)
         center_y = total_body_y / float(skeletons_count)
         center_z = total_body_z / float(skeletons_count)
-        return WorldViewCoordinate(center_x, center_y, center_z)
+
+        return {"x": center_x, "y": center_y, "z": center_z}
 
     @staticmethod
     def create_body(kinect_body, init_angle, init_center_position):
-        joints_dict = dict()
-        for joint in kinect_body["Joints"].itervalues():
+        """
+        {
+            "Joints": {
+                "JointType": {
+                    "JointType": "JointType"
+                    "WorldViewPoint": {
+                        "x": x,
+                        "y": y,
+                        "z": z
+                    }
+                }
+            }
+        }
+        """
+        worldview_body = dict()
+        worldview_body["Joints"] = dict()
+
+        for joint_type, joint in kinect_body["Joints"].iteritems():
             # translation
-            translate_x = joint["CameraSpacePoint"]["x"] - init_center_position.x
-            translate_y = joint["CameraSpacePoint"]["y"] - init_center_position.y
-            translate_z = joint["CameraSpacePoint"]["z"] - init_center_position.z
+            translate_x = joint["CameraSpacePoint"]["x"] - init_center_position["x"]
+            translate_y = joint["CameraSpacePoint"]["y"] - init_center_position["y"]
+            translate_z = joint["CameraSpacePoint"]["z"] - init_center_position["z"]
 
             # rotation
             rotate_x = translate_x * math.cos(init_angle) + translate_z * math.sin(init_angle)
             rotate_y = translate_y
             rotate_z = translate_z * math.cos(init_angle) - translate_x * math.sin(init_angle)
 
-            joints_dict[joint["JointType"]] = WorldViewJoint(WorldViewCoordinate(rotate_x, rotate_y, rotate_z))
+            worldview_joint = dict()
+            worldview_joint["JointType"] = joint_type
+            worldview_joint["WorldViewPoint"] = dict()
+            worldview_joint["WorldViewPoint"]["x"] = rotate_x
+            worldview_joint["WorldViewPoint"]["y"] = rotate_y
+            worldview_joint["WorldViewPoint"]["z"] = rotate_z
 
-        return WorldViewBody(joints_dict)
+            worldview_body["Joints"][joint_type] = worldview_joint
+
+        return worldview_body
 
     @staticmethod
     def calculate_joints_differences(worldview_body1, worldview_body2):
@@ -82,33 +106,8 @@ class WorldViewCoordinateSystem:
             joint_2_coordinate = worldview_body2["Joints"][joint_type]["WorldViewPoint"]
 
             total_difference += math.sqrt(
-                math.pow(joint_1_coordinate.x - joint_2_coordinate.x, 2) +
-                math.pow(joint_1_coordinate.y - joint_2_coordinate.y, 2) +
-                math.pow(joint_1_coordinate.z - joint_2_coordinate.z, 2))
+                math.pow(joint_1_coordinate["x"] - joint_2_coordinate["x"], 2) +
+                math.pow(joint_1_coordinate["y"] - joint_2_coordinate["y"], 2) +
+                math.pow(joint_1_coordinate["z"] - joint_2_coordinate["z"], 2))
 
         return total_difference
-
-
-class WorldViewBody(object):
-    def __init__(self, joints_dict):
-        self.joints_dict = joints_dict
-
-    def __getitem__(self, item):
-        if item == "Joints":
-            return self.joints_dict
-
-
-class WorldViewJoint(object):
-    def __init__(self, position):
-        self.position = position
-
-    def __getitem__(self, item):
-        if item == "WorldViewPoint":
-            return self.position
-
-
-class WorldViewCoordinate(object):
-    def __init__(self, x, y, z):
-        self.x = x
-        self.y = y
-        self.z = z
