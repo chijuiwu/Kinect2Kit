@@ -169,8 +169,9 @@ class Tracker(object):
             camera_addr = camera.get_addr()
             perspective = result.create_perspective(camera_name, camera_addr)
 
+            i = 0
             for same_person_skeletons_list in skeletons_matches_list:
-                person = result.create_person()
+                person = result.create_person(i)
 
                 # find the person's skeleton inside this FOV
                 skeleton_in_camera = next(s for c, s in same_person_skeletons_list if c.get_addr() == camera.get_addr())
@@ -184,6 +185,7 @@ class Tracker(object):
                         person.add_skeleton(False, c.get_name(), c.get_addr(), kinect_body["Joints"])
 
                 perspective.add_person(person)
+                i += 1
 
             self.result.add_perspective(perspective)
 

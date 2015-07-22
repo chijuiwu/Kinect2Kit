@@ -24,12 +24,12 @@ namespace Kinect2KitAPI
         /// <summary>
         /// Kinect clients
         /// </summary>
-        private static List<Kinect2KitClientInfo> clientsList = new List<Kinect2KitClientInfo>();
-        public static List<Kinect2KitClientInfo> Clients
+        private static List<Kinect2KitClientInfo> kinectClientsList = new List<Kinect2KitClientInfo>();
+        public static List<Kinect2KitClientInfo> KinectClients
         {
             get
             {
-                return Kinect2KitAPI.clientsList;
+                return Kinect2KitAPI.kinectClientsList;
             }
         }
 
@@ -67,12 +67,12 @@ namespace Kinect2KitAPI
             Kinect2KitAPI.ServerEndpoint = "http://" + Kinect2KitAPI.ServerIPAddress + ":" + Kinect2KitAPI.ServerPort;
         }
 
-        public static void AddClient(string name, string address)
+        public static void AddKinectClient(string name, string address)
         {
             Kinect2KitClientInfo client = new Kinect2KitClientInfo();
             client.Name = name;
             client.IPAddress = address;
-            Kinect2KitAPI.Clients.Add(client);
+            Kinect2KitAPI.KinectClients.Add(client);
         }
 
         /// <summary>
@@ -86,16 +86,16 @@ namespace Kinect2KitAPI
             var root = setupDoc.Element("Kinect2KitSetup");
 
             var server = root.Element("Server");
-            string serverIPAddress = server.Element("Address").Value;
+            string serverIPAddress = server.Element("IPAddress").Value;
             uint serverPort = Convert.ToUInt32(server.Element("Port").Value);
             Kinect2KitAPI.SetServerEndpoint(serverIPAddress, serverPort);
 
-            var clients = root.Element("Clients");
-            foreach (var client in clients.Elements("Client"))
+            var kinects = root.Element("Kinects");
+            foreach (var kinect in kinects.Elements("Kinect"))
             {
-                string clientName = client.Element("Name").Value;
-                string clientAddress = client.Element("Address").Value;
-                Kinect2KitAPI.AddClient(clientName, clientAddress);
+                string kinectName = kinect.Element("Name").Value;
+                string kinectIPAddress = kinect.Element("IPAddress").Value;
+                Kinect2KitAPI.AddKinectClient(kinectName, kinectIPAddress);
             }
         }
 
@@ -106,7 +106,7 @@ namespace Kinect2KitAPI
         /// <returns></returns>
         public static async Task<Kinect2KitSimpleResponse> StartSessionAsync(string name)
         {
-            string clients = JsonConvert.SerializeObject(Kinect2KitAPI.Clients);
+            string clients = JsonConvert.SerializeObject(Kinect2KitAPI.KinectClients);
             var parameters = new List<KeyValuePair<string, string>>
             {
                 new KeyValuePair<string, string>("Name", name),
@@ -142,8 +142,50 @@ namespace Kinect2KitAPI
         public static async Task<Kinect2KitTrackingResponse> GetTrackingResult()
         {
             Tuple<HttpResponseMessage, JToken> result = await Kinect2KitAPI.GETAsync(Kinect2KitAPI.API_TrackingResult);
-            System.Diagnostics.Debug.WriteLine(result.Item2.ToString());
-            return new Kinect2KitTrackingResponse(result.Item1);
+            JToken trackingResult = (JToken)result.Item2["result"];
+
+            double timestamp = (double)trackingResult["Timestamp"];
+
+            JToken perspectives = trackingResult["Perspectives"];
+            Dictionary<string, Kinect2KitPerspective> perspectivesDict = new Dictionary<string, Kinect2KitPerspective>();
+            foreach (JToken perspective in perspectives)
+            {
+                string kinectName = (string)perspective["KinectName"];
+                string kinectIPAddress = (string)perspective["KinectIPAddress"];
+
+                JToken people = perspective["People"];
+                List<Kinect2KitPerson> peopleList = new List<Kinect2KitPerson>();
+                foreach (JToken person in people)
+                {
+                    int id = (int)person["Id"];
+
+                    JToken skeletons = person["Skeletons"];
+                    Dictionary<string, Kinect2KitSkeleton> skeletonsDict = new Dictionary<string, Kinect2KitSkeleton>();
+                    foreach (JToken skeleton in skeletons)
+                    {
+                        bool original = (bool)skeleton["IsOriginal"];
+                        string originKinectName = (string)skeleton["KinectName"];
+                        string originKinectIPAddress = (string)skeleton["KinectIPAddress"];
+
+                        JToken joints = skeleton["Joints"];
+                        Dictionary<JointType, Joint> jointsDict = new Dictionary<JointType, Joint>();
+                        foreach (JToken joint in joints)
+                        {
+                            JointType jtType = (JointType)Enum.Parse(typeof(JointType), (string)joint["JointType"]);
+                            Joint jt = new Joint();
+                            jt.JointType = jtType;
+                            jt.Position.X = (float)joint["CameraSpacePoint"]["x"];
+                            jt.Position.Y = (float)joint["CameraSpacePoint"]["Y"];
+                            jt.Position.Z = (float)joint["CameraSpacePoint"]["Z"];
+                            jointsDict[jtType] = jt;
+                        }
+                        skeletonsDict[originKinectName] = new Kinect2KitSkeleton(original, originKinectName, originKinectIPAddress, jointsDict);
+                    }
+                    peopleList.Add(new Kinect2KitPerson(id, skeletonsDict));
+                }
+                perspectivesDict[kinectName] = new Kinect2KitPerspective(kinectName, kinectIPAddress, peopleList);
+            }
+            return new Kinect2KitTrackingResponse(result.Item1, timestamp, perspectivesDict);
         }
 
         /// <summary>

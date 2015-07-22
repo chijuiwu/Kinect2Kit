@@ -46,6 +46,7 @@
     <Compile Include="Kinect2KitAPI.cs" />
     <Compile Include="Kinect2KitBodyFrame.cs" />
     <Compile Include="Kinect2KitClient.cs" />
+    <Compile Include="Kinect2KitPerspective.cs" />
     <Compile Include="Kinect2KitResponse.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>

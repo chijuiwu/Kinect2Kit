@@ -11,6 +11,11 @@ namespace Kinect2KitAPI
     {
         public bool IsSuccessful { get; private set; }
 
+        public Kinect2KitServerResponse()
+        {
+            this.IsSuccessful = false;
+        }
+
         public Kinect2KitServerResponse(HttpResponseMessage httpMessage)
         {
             this.IsSuccessful = httpMessage.IsSuccessStatusCode;
@@ -50,9 +55,13 @@ namespace Kinect2KitAPI
     public class Kinect2KitTrackingResponse : Kinect2KitServerResponse
     {
 
-        public Kinect2KitTrackingResponse(HttpResponseMessage httpMessage) : base(httpMessage)
-        {
+        public double Timestamp { get; private set; }
+        public Dictionary<string, Kinect2KitPerspective> Perspectives { get; private set; }
 
+        public Kinect2KitTrackingResponse(HttpResponseMessage httpMessage, double timestamp, Dictionary<string, Kinect2KitPerspective> perspectives) : base(httpMessage)
+        {
+            this.Timestamp = timestamp;
+            this.Perspectives = perspectives;
         }
     }
 }

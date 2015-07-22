@@ -15,6 +15,10 @@ You can find my undergraduate thesis titled Tracking people with Multiple Kinect
 
 *Average joint difference is a person's distance difference between their Kinect skeletons orginally from different FOVs in the same viewing perspective.
 
+## API
+
+
+
 ## Limitations
 
 The current approach assumes that all Kinects are placed on the same level. It does not work when the Kinects are more than 90 degrees apart, e.g. two Kinects opposite of each other.

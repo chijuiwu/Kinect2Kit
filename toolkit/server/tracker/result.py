@@ -22,16 +22,17 @@ class Result(object):
 
         for perspective in self.perspectives_dict.itervalues():
             perspective_vars = dict()
-            perspective_vars["Name"] = perspective.get_name()
-            perspective_vars["IPAddress"] = perspective.get_addr()
+            perspective_vars["KinectName"] = perspective.get_name()
+            perspective_vars["KinectIPAddress"] = perspective.get_addr()
             perspective_vars["People"] = list()
 
             for person in perspective.get_people():
                 person_vars = dict()
+                person_vars["Id"] = person.get_id()
                 person_vars["Skeletons"] = person.get_skeletons()
                 perspective_vars["People"].append(person_vars)
 
-            result_vars["Perspectives"][perspective_vars["Name"]] = perspective_vars
+            result_vars["Perspectives"][perspective_vars["KinectName"]] = perspective_vars
 
         return result_vars
 
@@ -64,12 +65,16 @@ def create_perspective(*args):
 
 
 class Person(object):
-    def __init__(self):
+    def __init__(self, id):
+        self.id = id
         self.skeletons_dict = dict()
+
+    def get_id(self):
+        return self.id
 
     def add_skeleton(self, is_original, kinect_name, kinect_addr, joints_dict):
         self.skeletons_dict[kinect_name] = {
-            "Original": is_original,
+            "IsOriginal": is_original,
             "KinectName": kinect_name,
             "KinectIPAddress": kinect_addr,
             "Joints": joints_dict
@@ -79,5 +84,5 @@ class Person(object):
         return self.skeletons_dict
 
 
-def create_person():
-    return Person()
+def create_person(*args):
+    return Person(*args)
