@@ -11,8 +11,8 @@ def new_session():
 
     app_addr = request.remote_addr
     try:
-        name = request.form["name"]
-        clients = json.loads(request.form["clients"])
+        name = request.form["Name"]
+        clients = json.loads(request.form["Clients"])
         for client in clients:
             kinect2kit_tracker.add_kinect(client["Name"], client["IPAddress"])
         kinect2kit_tracker.set_session(name, app_addr)
@@ -102,7 +102,7 @@ def stream_bodyframe():
         return jsonify(message="Ignored, Server does not require frames"), 400
     try:
         kinect_addr = request.remote_addr
-        bodyframe = json.loads(request.form["bodyframe"])
+        bodyframe = json.loads(request.form["Bodyframe"])
         camera = kinect2kit_tracker.get_kinect(kinect_addr)
         if camera is not None:
             kinect2kit_tracker.update_bodyframe(camera, bodyframe)
@@ -122,10 +122,10 @@ def add_kinect():
     app_addr = request.remote_addr
     if kinect2kit_tracker.authenticate(app_addr):
         try:
-            name = request.form["name"]
-            addr = request.form["addr"]
-            tilt_angle = request.form["tilt_angle"]
-            height = request.form["height"]
+            name = request.form["Name"]
+            addr = request.form["IPAddress"]
+            tilt_angle = request.form["TiltAngle"]
+            height = request.form["Height"]
             kinect2kit_tracker.add_kinect(name, addr, tilt_angle, height)
             return jsonify(message="OK")
         except KeyError:
@@ -143,7 +143,7 @@ def remove_kinect():
     app_addr = request.remote_addr
     if kinect2kit_tracker.authenticate(app_addr):
         try:
-            kinect_addr = request.form["addr"]
+            kinect_addr = request.form["IPAddress"]
             if kinect2kit_tracker.authenticate(app_addr):
                 kinect2kit_tracker.remove_kinect(kinect_addr)
                 return jsonify(message="OK")

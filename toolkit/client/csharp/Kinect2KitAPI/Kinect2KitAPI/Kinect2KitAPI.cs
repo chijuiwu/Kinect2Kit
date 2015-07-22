@@ -109,8 +109,8 @@ namespace Kinect2KitAPI
             string clients = JsonConvert.SerializeObject(Kinect2KitAPI.Clients);
             var parameters = new List<KeyValuePair<string, string>>
             {
-                new KeyValuePair<string, string>("name", name),
-                new KeyValuePair<string, string>("clients", clients)
+                new KeyValuePair<string, string>("Name", name),
+                new KeyValuePair<string, string>("Clients", clients)
             };
             Tuple<HttpResponseMessage, JToken> result = await Kinect2KitAPI.POSTAsync(Kinect2KitAPI.API_NewSession, parameters);
             return new Kinect2KitSimpleResponse(result.Item1, (string)result.Item2["message"]);
@@ -142,6 +142,7 @@ namespace Kinect2KitAPI
         public static async Task<Kinect2KitTrackingResponse> GetTrackingResult()
         {
             Tuple<HttpResponseMessage, JToken> result = await Kinect2KitAPI.GETAsync(Kinect2KitAPI.API_TrackingResult);
+            System.Diagnostics.Debug.WriteLine(result.Item2.ToString());
             return new Kinect2KitTrackingResponse(result.Item1);
         }
 
@@ -155,7 +156,7 @@ namespace Kinect2KitAPI
         {
             var parameters = new List<KeyValuePair<string, string>>
             {
-                new KeyValuePair<string, string>("bodyframe", Kinect2KitAPI.GetBodyFrameJSON(timestamp, bodies))
+                new KeyValuePair<string, string>("Bodyframe", Kinect2KitAPI.GetBodyFrameJSON(timestamp, bodies))
             };
             Tuple<HttpResponseMessage, JToken> result = await Kinect2KitAPI.POSTAsync(Kinect2KitAPI.API_StreamBodyFrame, parameters);
             return new Kinect2KitSimpleResponse(result.Item1, (string)result.Item2["message"]);
