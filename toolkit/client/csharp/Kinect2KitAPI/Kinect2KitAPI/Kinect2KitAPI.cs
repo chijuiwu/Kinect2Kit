@@ -200,8 +200,15 @@ namespace Kinect2KitAPI
             {
                 new KeyValuePair<string, string>("Bodyframe", Kinect2KitAPI.GetBodyFrameJSON(timestamp, bodies))
             };
-            Tuple<HttpResponseMessage, JToken> result = await Kinect2KitAPI.POSTAsync(Kinect2KitAPI.API_StreamBodyFrame, parameters);
-            return new Kinect2KitSimpleResponse(result.Item1, (string)result.Item2["message"]);
+            try
+            {
+                Tuple<HttpResponseMessage, JToken> result = await Kinect2KitAPI.POSTAsync(Kinect2KitAPI.API_StreamBodyFrame, parameters);
+                return new Kinect2KitSimpleResponse(result.Item1, (string)result.Item2["message"]);
+            }
+            catch (Exception e)
+            {
+                return new Kinect2KitSimpleResponse("Unable to connect to the server.");
+            }
         }
         #endregion
 

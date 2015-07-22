@@ -26,6 +26,11 @@ namespace Kinect2KitAPI
     {
         public string ServerMessage { get; private set; }
 
+        public Kinect2KitSimpleResponse(string message)
+        {
+            this.ServerMessage = message;
+        }
+
         public Kinect2KitSimpleResponse(HttpResponseMessage httpMessage, string message)
             : base(httpMessage)
         {
