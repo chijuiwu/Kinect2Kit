@@ -309,7 +309,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         private void Reader_FrameArrived(object sender, BodyFrameArrivedEventArgs e)
         {
             bool dataReceived = false;
-            double timestamp = 0; 
+            double timestamp = 0;
 
             using (BodyFrame bodyFrame = e.FrameReference.AcquireFrame())
             {
@@ -541,6 +541,9 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             this.StatusText = String.Format("Streaming BodyFrame(timestamp: {0}) to Kinect2Kit server @ {1}, Response: {2} ", timestamp, Kinect2KitAPI.ServerEndpoint, resp.ServerMessage);
         }
 
+        private string serverAddress;
+        private int serverPort;
+
         #region Kinect2Kit button handles
         private void Setup_Kinect2Kit_ServerAddress_Click(object sender, RoutedEventArgs e)
         {
@@ -550,9 +553,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             setupServer.ShowDialog();
             if (setupServer.DialogResult.HasValue && setupServer.DialogResult.Value)
             {
-                string serverAddress = setupServer.entryIPAddress.Text;
-                uint serverPort = Convert.ToUInt32(setupServer.entryPort.Text);
-                Kinect2KitAPI.SetServerEndpoint(serverAddress, serverPort);
+                this.serverAddress = setupServer.entryIPAddress.Text;
+                this.serverPort = Convert.ToInt32(setupServer.entryPort.Text);
                 this.btnStartStopStreaming.IsEnabled = true;
             }
             else
@@ -563,6 +565,12 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
         private void Stream_BodyFrame_Click(object sender, RoutedEventArgs e)
         {
+            if (!Kinect2KitAPI.TrySetServerEndPoint(serverAddress, serverPort))
+            {
+                this.StatusText = "Kinect2Kit server is not avaialble!!";
+                MessageBox.Show(this, "The server is not available. Is it running?", "Kinect2Kit notification");
+                return;
+            }
             this.streaming = !this.streaming;
             if (this.streaming)
             {

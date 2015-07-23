@@ -3,6 +3,8 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using System.Net;
+using System.Net.Sockets;
 using System.Net.Http;
 using Microsoft.Kinect;
 using Newtonsoft.Json;
@@ -18,7 +20,7 @@ namespace Kinect2KitAPI
         /// Kinect2Kit server
         /// </summary>
         public static string ServerIPAddress { get; private set; }
-        public static uint ServerPort { get; private set; }
+        public static int ServerPort { get; private set; }
         public static string ServerEndpoint { get; private set; }
 
         /// <summary>
@@ -60,11 +62,21 @@ namespace Kinect2KitAPI
         /// </summary>
         /// <param name="address"></param>
         /// <param name="port"></param>
-        public static void SetServerEndpoint(string address, uint port)
+        public static bool TrySetServerEndPoint(string address, int port)
         {
-            Kinect2KitAPI.ServerIPAddress = address;
-            Kinect2KitAPI.ServerPort = port;
-            Kinect2KitAPI.ServerEndpoint = "http://" + Kinect2KitAPI.ServerIPAddress + ":" + Kinect2KitAPI.ServerPort;
+            TcpClient client = new TcpClient();
+            try
+            {
+                client.Connect(address, port);
+                Kinect2KitAPI.ServerIPAddress = address;
+                Kinect2KitAPI.ServerPort = port;
+                Kinect2KitAPI.ServerEndpoint = "http://" + Kinect2KitAPI.ServerIPAddress + ":" + Kinect2KitAPI.ServerPort;
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
         }
 
         public static void AddKinectClient(string name, string address)
@@ -87,8 +99,8 @@ namespace Kinect2KitAPI
 
             var server = root.Element("Server");
             string serverIPAddress = server.Element("IPAddress").Value;
-            uint serverPort = Convert.ToUInt32(server.Element("Port").Value);
-            Kinect2KitAPI.SetServerEndpoint(serverIPAddress, serverPort);
+            int serverPort = Convert.ToInt32(server.Element("Port").Value);
+            Kinect2KitAPI.TrySetServerEndPoint(serverIPAddress, serverPort);
 
             var kinects = root.Element("Kinects");
             foreach (var kinect in kinects.Elements("Kinect"))
@@ -112,19 +124,19 @@ namespace Kinect2KitAPI
                 new KeyValuePair<string, string>("Name", name),
                 new KeyValuePair<string, string>("Clients", clients)
             };
-            Tuple<HttpResponseMessage, JToken> result = await Kinect2KitAPI.POSTAsync(Kinect2KitAPI.API_NewSession, parameters);
+            Tuple<HttpResponseMessage, JObject> result = await Kinect2KitAPI.POSTAsync(Kinect2KitAPI.API_NewSession, parameters);
             return new Kinect2KitSimpleResponse(result.Item1, (string)result.Item2["message"]);
         }
 
         public static async Task<Kinect2KitSimpleResponse> StartCalibrationAsync()
         {
-            Tuple<HttpResponseMessage, JToken> result = await Kinect2KitAPI.POSTAsync(Kinect2KitAPI.API_StartCalibration);
+            Tuple<HttpResponseMessage, JObject> result = await Kinect2KitAPI.POSTAsync(Kinect2KitAPI.API_StartCalibration);
             return new Kinect2KitSimpleResponse(result.Item1, (string)result.Item2["message"]);
         }
 
         public static async Task<Kinect2KitCalibrationResponse> GetCalibrationStatus()
         {
-            Tuple<HttpResponseMessage, JToken> result = await Kinect2KitAPI.GETAsync(Kinect2KitAPI.API_CalibrationStatus);
+            Tuple<HttpResponseMessage, JObject> result = await Kinect2KitAPI.GETAsync(Kinect2KitAPI.API_CalibrationStatus);
             bool acquiring = (bool)result.Item2["acquiring"];
             int requiredFrames = (int)result.Item2["required_frames"];
             int remainedFrames = (int)result.Item2["remained_frames"];
@@ -135,13 +147,13 @@ namespace Kinect2KitAPI
 
         public static async Task<Kinect2KitSimpleResponse> StartTrackingAsync()
         {
-            Tuple<HttpResponseMessage, JToken> result = await Kinect2KitAPI.POSTAsync(Kinect2KitAPI.API_StartTracking);
+            Tuple<HttpResponseMessage, JObject> result = await Kinect2KitAPI.POSTAsync(Kinect2KitAPI.API_StartTracking);
             return new Kinect2KitSimpleResponse(result.Item1, (string)result.Item2["message"]);
         }
 
         public static async Task<Kinect2KitTrackingResponse> GetTrackingResult()
         {
-            Tuple<HttpResponseMessage, JToken> result = await Kinect2KitAPI.GETAsync(Kinect2KitAPI.API_TrackingResult);
+            Tuple<HttpResponseMessage, JObject> result = await Kinect2KitAPI.GETAsync(Kinect2KitAPI.API_TrackingResult);
             JToken trackingResult = (JToken)result.Item2["result"];
 
             double timestamp = (double)trackingResult["Timestamp"];
@@ -200,15 +212,8 @@ namespace Kinect2KitAPI
             {
                 new KeyValuePair<string, string>("Bodyframe", Kinect2KitAPI.GetBodyFrameJSON(timestamp, bodies))
             };
-            try
-            {
-                Tuple<HttpResponseMessage, JToken> result = await Kinect2KitAPI.POSTAsync(Kinect2KitAPI.API_StreamBodyFrame, parameters);
-                return new Kinect2KitSimpleResponse(result.Item1, (string)result.Item2["message"]);
-            }
-            catch (Exception e)
-            {
-                return new Kinect2KitSimpleResponse("Unable to connect to the server.");
-            }
+            Tuple<HttpResponseMessage, JObject> result = await Kinect2KitAPI.POSTAsync(Kinect2KitAPI.API_StreamBodyFrame, parameters);
+            return new Kinect2KitSimpleResponse(result.Item1, (string)result.Item2["message"]);
         }
         #endregion
 
@@ -262,16 +267,16 @@ namespace Kinect2KitAPI
         /// </summary>
         /// <param name="api"></param>
         /// <returns></returns>
-        private static async Task<Tuple<HttpResponseMessage, JToken>> GETAsync(string api)
+        private static async Task<Tuple<HttpResponseMessage, JObject>> GETAsync(string api)
         {
             string url = Kinect2KitAPI.URL_For(api);
             using (HttpClient client = new HttpClient())
             {
                 HttpResponseMessage httpMessage = await client.GetAsync(url);
-                string content = await httpMessage.Content.ReadAsStringAsync();
-                JToken serverResponseJSON = JObject.Parse(content);
-                return new Tuple<HttpResponseMessage, JToken>(httpMessage, serverResponseJSON);
-            }
+                string responseText = await httpMessage.Content.ReadAsStringAsync();
+                JObject responseJSON = JObject.Parse(responseText);
+                return new Tuple<HttpResponseMessage, JObject>(httpMessage, responseJSON);
+            };
         }
 
         /// <summary>
@@ -279,7 +284,7 @@ namespace Kinect2KitAPI
         /// </summary>
         /// <param name="api"></param>
         /// <returns></returns>
-        private static async Task<Tuple<HttpResponseMessage, JToken>> POSTAsync(string api)
+        private static async Task<Tuple<HttpResponseMessage, JObject>> POSTAsync(string api)
         {
             return await Kinect2KitAPI.POSTAsync(api, Kinect2KitAPI.EmptyParameters);
         }
@@ -290,16 +295,16 @@ namespace Kinect2KitAPI
         /// <param name="api"></param>
         /// <param name="parameters"></param>
         /// <returns></returns>
-        private static async Task<Tuple<HttpResponseMessage, JToken>> POSTAsync(string api, List<KeyValuePair<string, string>> parameters)
+        private static async Task<Tuple<HttpResponseMessage, JObject>> POSTAsync(string api, List<KeyValuePair<string, string>> parameters)
         {
             string url = Kinect2KitAPI.URL_For(api);
+            FormUrlEncodedContent data = new FormUrlEncodedContent(parameters);
             using (HttpClient client = new HttpClient())
             {
-                FormUrlEncodedContent data = new FormUrlEncodedContent(parameters);
                 HttpResponseMessage httpMessage = await client.PostAsync(url, data);
-                string content = await httpMessage.Content.ReadAsStringAsync();
-                JToken serverResponseJSON = JObject.Parse(content);
-                return new Tuple<HttpResponseMessage, JToken>(httpMessage, serverResponseJSON);
+                string responseText = await httpMessage.Content.ReadAsStringAsync();
+                JObject responseJSON = JObject.Parse(responseText);
+                return new Tuple<HttpResponseMessage, JObject>(httpMessage, responseJSON);
             };
         }
         #endregion
