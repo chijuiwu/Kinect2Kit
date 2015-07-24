@@ -565,22 +565,30 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
         private void Stream_BodyFrame_Click(object sender, RoutedEventArgs e)
         {
+            this.btnStartStopStreaming.IsEnabled = false;
+            this.btnSetupKinect2KitServer.IsEnabled = false;
+
             if (!Kinect2KitAPI.TrySetServerEndPoint(serverAddress, serverPort))
             {
-                this.StatusText = "Kinect2Kit server is not avaialble!!";
                 MessageBox.Show(this, "The server is not available. Is it running?", "Kinect2Kit notification");
+                this.StatusText = "The server is not avaialble!!";
+                this.btnStartStopStreaming.IsEnabled = false;
+                this.btnSetupKinect2KitServer.IsEnabled = true;
                 return;
             }
             this.streaming = !this.streaming;
             if (this.streaming)
             {
+                this.StatusText = "Streaming data to the server.";
                 this.btnStartStopStreaming.Content = "Stop";
-                // server setup
+                this.btnStartStopStreaming.IsEnabled = true;
                 this.btnSetupKinect2KitServer.IsEnabled = false;
             }
             else
             {
+                this.StatusText = "Stopped streaming data to the server.";
                 this.btnStartStopStreaming.Content = "Start";
+                this.btnStartStopStreaming.IsEnabled = true;
                 this.btnSetupKinect2KitServer.IsEnabled = true;
             }
         }

@@ -23,7 +23,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         {
             InitializeComponent();
             // default
-            this.entryIPAddress.Text = "localhost";
             this.entryPort.Text = "8000";
         }
 

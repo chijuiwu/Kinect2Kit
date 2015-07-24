@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Net.Http;
 using Microsoft.Kinect;
@@ -64,10 +65,11 @@ namespace Kinect2KitAPI
         /// <param name="port"></param>
         public static bool TrySetServerEndPoint(string address, int port)
         {
-            TcpClient client = new TcpClient();
             try
             {
+                TcpClient client = new TcpClient();
                 client.Connect(address, port);
+                client.Close();
                 Kinect2KitAPI.ServerIPAddress = address;
                 Kinect2KitAPI.ServerPort = port;
                 Kinect2KitAPI.ServerEndpoint = "http://" + Kinect2KitAPI.ServerIPAddress + ":" + Kinect2KitAPI.ServerPort;
@@ -92,7 +94,7 @@ namespace Kinect2KitAPI
         /// </summary>
         /// <param name="setupFilepath"></param>
         /// <returns></returns>
-        public static void LoadSetup(string setupFilepath)
+        public static bool TryLoadSetup(string setupFilepath)
         {
             XDocument setupDoc = XDocument.Load(setupFilepath);
             var root = setupDoc.Element("Kinect2KitSetup");
@@ -100,8 +102,11 @@ namespace Kinect2KitAPI
             var server = root.Element("Server");
             string serverIPAddress = server.Element("IPAddress").Value;
             int serverPort = Convert.ToInt32(server.Element("Port").Value);
-            Kinect2KitAPI.TrySetServerEndPoint(serverIPAddress, serverPort);
-
+            if (!Kinect2KitAPI.TrySetServerEndPoint(serverIPAddress, serverPort))
+            {
+                return false;
+            }
+            
             var kinects = root.Element("Kinects");
             foreach (var kinect in kinects.Elements("Kinect"))
             {
@@ -109,6 +114,8 @@ namespace Kinect2KitAPI
                 string kinectIPAddress = kinect.Element("IPAddress").Value;
                 Kinect2KitAPI.AddKinectClient(kinectName, kinectIPAddress);
             }
+
+            return true;
         }
 
         /// <summary>
