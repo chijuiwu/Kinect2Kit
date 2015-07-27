@@ -19,6 +19,11 @@ namespace Kinect2SimpleServer
         public event KinectSBodyFrameReceivedHandler BodyFrameReceived;
         public delegate void KinectSBodyFrameReceivedHandler(Kinect2SBodyFrame serializableBodyFrame);
 
+        public Kinect2SimpleServer(int port)
+        {
+            this.HostEndPoint = new IPEndPoint(IPAddress.Any, port);
+        }
+
         public Kinect2SimpleServer(string address, int port)
         {
             this.HostEndPoint = new IPEndPoint(IPAddress.Parse(address), port);
@@ -26,10 +31,12 @@ namespace Kinect2SimpleServer
 
         public void Start()
         {
+            this.Stop();
             this.server = new TcpListener(this.HostEndPoint);
             this.server.Start();
             this.serverThread = new Thread(new ThreadStart(this.ServerWorkerThread));
             this.serverThread.Start();
+            System.Diagnostics.Debug.WriteLine("Server running...", "Kinect2SimpleServer");
         }
 
         public void Stop()
@@ -49,16 +56,32 @@ namespace Kinect2SimpleServer
             while (true)
             {
                 TcpClient client = this.server.AcceptTcpClient();
-                NetworkStream clientStream = client.GetStream();
+                Thread handleClientThread = new Thread(() => this.ServerHandleClientThread(client));
+                handleClientThread.Start();
+            }
+        }
+
+        private void ServerHandleClientThread(TcpClient client)
+        {
+            NetworkStream clientStream = client.GetStream();
+
+            while (true)
+            {
                 try
                 {
-                    if (!client.Connected) continue;
+                    if (!client.Connected) break;
 
                     while (!clientStream.DataAvailable) ;
-
+                    
+                    // Receive bodyframe as byte array
                     Kinect2SBodyFrame serializableBodyFrame = Kinect2Serializer.Kinect2Serializer.Deserialize(clientStream);
-                    this.BodyFrameReceived(serializableBodyFrame);
+                    if (this.BodyFrameReceived != null)
+                    {
+                        this.BodyFrameReceived(serializableBodyFrame);
+                    }
+                    System.Diagnostics.Debug.WriteLine("BodyFrame received! Timestamp: " + serializableBodyFrame.Timestamp, "Kinect2SimpleServer");
 
+                    // Trivial response
                     byte[] response = Encoding.Default.GetBytes("OK");
                     clientStream.Write(response, 0, response.Length);
                     clientStream.Flush();
@@ -67,9 +90,14 @@ namespace Kinect2SimpleServer
                 {
                     System.Diagnostics.Debug.WriteLine("Server exception", "Kinect2SimpleServer");
                     clientStream.Close();
+                    clientStream.Dispose();
                     client.Close();
                 }
             }
+
+            clientStream.Close();
+            clientStream.Dispose();
+            client.Close();
         }
     }
 }

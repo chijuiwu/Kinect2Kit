@@ -28,13 +28,13 @@ namespace Kinect2SimpleClient
 
         public void Start()
         {
-            this.Close();   
+            this.Stop();   
             this.client = new TcpClient();
             this.clientThread = new Thread(new ThreadStart(this.ClientWorkerThread));
             this.clientThread.Start();
         }
 
-        public void Close()
+        public void Stop()
         {
             if (this.clientThread != null)
             {
@@ -63,10 +63,11 @@ namespace Kinect2SimpleClient
                 {
                     this.client.Connect(this.HostEndPoint);
                     this.clientStream = this.client.GetStream();
+                    System.Diagnostics.Debug.WriteLine("Connected to the server.", "Kinect2SimpleClient");
                 }
                 catch (Exception)
                 {
-                    System.Diagnostics.Debug.WriteLine("Connect to the server failed. Re-trying...", "Kinect2SimpleClient");
+                    System.Diagnostics.Debug.WriteLine("Failed to connect to the server. Re-trying...", "Kinect2SimpleClient");
                 }
             }
         }
@@ -92,20 +93,24 @@ namespace Kinect2SimpleClient
             }
             try
             {
+                // Send BodyFrame as byte array
                 byte[] bodyFrameInBytes = Kinect2Serializer.Kinect2Serializer.Serialize(timestamp, bodies);
                 this.clientStream.Write(bodyFrameInBytes, 0, bodyFrameInBytes.Length);
                 this.clientStream.Flush();
 
+                // Ignore response
                 byte[] response = new byte[256];
                 this.clientStream.Read(response, 0, response.Length);
-                // Ignore response
-
-                this.BodyFrameSent(timestamp);
-                System.Diagnostics.Debug.WriteLine("OK", "Kinect2SimpleClient");
+                
+                if (this.BodyFrameSent != null)
+                {
+                    this.BodyFrameSent(timestamp);
+                }
+                System.Diagnostics.Debug.WriteLine("BodyFrame sent! Timestamp: " + timestamp, "Kinect2SimpleClient");
             }
             catch (Exception)
             {
-                System.Diagnostics.Debug.WriteLine("Network failure", "Kinect2SimpleClient");
+                System.Diagnostics.Debug.WriteLine("Network failure.", "Kinect2SimpleClient");
             }
         }
     }

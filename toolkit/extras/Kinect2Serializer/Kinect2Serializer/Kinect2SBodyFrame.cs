@@ -31,7 +31,10 @@ namespace Kinect2Serializer
             serializableBodyFrame.Bodies = new List<Kinect2SBody>();
             foreach (Body body in bodies)
             {
-                serializableBodyFrame.Bodies.Add(Kinect2SBody.MakeInstance(body));
+                if (body.IsTracked)
+                {
+                    serializableBodyFrame.Bodies.Add(Kinect2SBody.MakeInstance(body));
+                }
             }
             return serializableBodyFrame;
         }
