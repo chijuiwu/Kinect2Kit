@@ -326,14 +326,16 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                     bodyFrame.GetAndRefreshBodyData(this.bodies);
                     dataReceived = true;
                     timestamp = bodyFrame.RelativeTime.TotalMilliseconds;
+                    // Send Kinect BodyFrame to the Kinect2Kit server
+                    if (this.streaming)
+                    {
+                        this.SendBodyFrame(timestamp, this.bodies);
+                    }
                 }
             }
 
             if (dataReceived)
             {
-                // Check if there are bodies to be sent to the Kinect2Kit server
-                bool containsTrackedBodies = false;
-
                 using (DrawingContext dc = this.drawingGroup.Open())
                 {
                     // Draw a transparent background to set the render size
@@ -346,8 +348,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
                         if (body.IsTracked)
                         {
-                            containsTrackedBodies = true;
-
                             this.DrawClippedEdges(body, dc);
 
                             IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
@@ -378,12 +378,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
                     // prevent drawing outside of our render area
                     this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
-                }
-
-                // Send Kinect BodyFrame to the Kinect2Kit server
-                if (containsTrackedBodies && this.streaming)
-                {
-                    this.SendBodyFrame(timestamp, this.bodies);
                 }
             }
         }
@@ -537,8 +531,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
         private async void SendBodyFrame(double timestamp, Body[] bodies)
         {
-            Kinect2KitSimpleResponse resp = await Kinect2KitAPI.StreamBodyFrame(timestamp, bodies);
-            this.StatusText = String.Format("Streaming BodyFrame(timestamp: {0}) to Kinect2Kit server @ {1}, Response: {2} ", timestamp, Kinect2KitAPI.ServerEndpoint, resp.ServerMessage);
+            Kinect2KitSimpleResponse resp = await Kinect2Kit.StreamBodyFrame(timestamp, bodies);
+            this.StatusText = String.Format("Streaming BodyFrame(timestamp: {0}) to Kinect2Kit server @ {1}, Response: {2} ", timestamp, Kinect2Kit.ServerEndpoint, resp.ServerMessage);
         }
 
         private string serverAddress;
@@ -568,7 +562,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             this.btnStartStopStreaming.IsEnabled = false;
             this.btnSetupKinect2KitServer.IsEnabled = false;
 
-            if (!Kinect2KitAPI.TrySetServerEndPoint(serverAddress, serverPort))
+            if (!Kinect2Kit.TrySetServerEndPoint(serverAddress, serverPort))
             {
                 MessageBox.Show(this, "The server is not available. Is it running?", "Kinect2Kit notification");
                 this.StatusText = "The server is not avaialble!!";

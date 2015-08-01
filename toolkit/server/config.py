@@ -51,6 +51,7 @@ tracking_result_format = {
                             "Joints": {
                                 "JointType": {
                                     "JointType": "JointType",
+                                    "TrackingState": "TrackingState",
                                     "CameraSpacePoint": {
                                         "x": "x",
                                         "y": "y",

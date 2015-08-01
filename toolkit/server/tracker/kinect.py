@@ -41,7 +41,8 @@ class Kinect(object):
         {
             "Joints": {
                 "JointType": {
-                    "JointType": "JointType"
+                    "JointType": "JointType",
+                    "TrackingState": "TrackingState",
                     "CameraSpacePoint": {
                         "x": x,
                         "y": y,

@@ -33,9 +33,9 @@ namespace Kinect2Serializer
             serializableBody.IsTracked = body.IsTracked;
             serializableBody.TrackingId = body.TrackingId;
             serializableBody.Joints = new Dictionary<JointType, Kinect2SJoint>();
-            foreach (KeyValuePair<JointType, Joint> joint in body.Joints)
+            foreach (Joint joint in body.Joints.Values)
             {
-                serializableBody.Joints.Add(joint.Key, Kinect2SJoint.MakeInstance(joint.Value));
+                serializableBody.Joints.Add(joint.JointType, Kinect2SJoint.MakeInstance(joint, body.JointOrientations[joint.JointType]));
             }
             serializableBody.ClippedEdges = body.ClippedEdges;
             return serializableBody;

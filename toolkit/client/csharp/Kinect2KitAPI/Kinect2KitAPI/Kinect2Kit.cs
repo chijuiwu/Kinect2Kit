@@ -15,7 +15,7 @@ using System.Xml.Linq;
 
 namespace Kinect2KitAPI
 {
-    public class Kinect2KitAPI
+    public class Kinect2Kit
     {
         /// <summary>
         /// Kinect2Kit server
@@ -32,7 +32,7 @@ namespace Kinect2KitAPI
         {
             get
             {
-                return Kinect2KitAPI.kinectClientsList;
+                return Kinect2Kit.kinectClientsList;
             }
         }
 
@@ -51,7 +51,7 @@ namespace Kinect2KitAPI
         {
             get
             {
-                return Kinect2KitAPI.ServerEndpoint != null;
+                return Kinect2Kit.ServerEndpoint != null;
             }
         }
 
@@ -70,9 +70,9 @@ namespace Kinect2KitAPI
                 TcpClient client = new TcpClient();
                 client.Connect(address, port);
                 client.Close();
-                Kinect2KitAPI.ServerIPAddress = address;
-                Kinect2KitAPI.ServerPort = port;
-                Kinect2KitAPI.ServerEndpoint = "http://" + Kinect2KitAPI.ServerIPAddress + ":" + Kinect2KitAPI.ServerPort;
+                Kinect2Kit.ServerIPAddress = address;
+                Kinect2Kit.ServerPort = port;
+                Kinect2Kit.ServerEndpoint = "http://" + Kinect2Kit.ServerIPAddress + ":" + Kinect2Kit.ServerPort;
                 return true;
             }
             catch (Exception)
@@ -86,7 +86,7 @@ namespace Kinect2KitAPI
             Kinect2KitClientInfo client = new Kinect2KitClientInfo();
             client.Name = name;
             client.IPAddress = address;
-            Kinect2KitAPI.KinectClients.Add(client);
+            Kinect2Kit.KinectClients.Add(client);
         }
 
         /// <summary>
@@ -102,7 +102,7 @@ namespace Kinect2KitAPI
             var server = root.Element("Server");
             string serverIPAddress = server.Element("IPAddress").Value;
             int serverPort = Convert.ToInt32(server.Element("Port").Value);
-            if (!Kinect2KitAPI.TrySetServerEndPoint(serverIPAddress, serverPort))
+            if (!Kinect2Kit.TrySetServerEndPoint(serverIPAddress, serverPort))
             {
                 return false;
             }
@@ -112,7 +112,7 @@ namespace Kinect2KitAPI
             {
                 string kinectName = kinect.Element("Name").Value;
                 string kinectIPAddress = kinect.Element("IPAddress").Value;
-                Kinect2KitAPI.AddKinectClient(kinectName, kinectIPAddress);
+                Kinect2Kit.AddKinectClient(kinectName, kinectIPAddress);
             }
 
             return true;
@@ -125,25 +125,25 @@ namespace Kinect2KitAPI
         /// <returns></returns>
         public static async Task<Kinect2KitSimpleResponse> StartSessionAsync(string name)
         {
-            string clients = JsonConvert.SerializeObject(Kinect2KitAPI.KinectClients);
+            string clients = JsonConvert.SerializeObject(Kinect2Kit.KinectClients);
             var parameters = new List<KeyValuePair<string, string>>
             {
                 new KeyValuePair<string, string>("Name", name),
                 new KeyValuePair<string, string>("Clients", clients)
             };
-            Tuple<HttpResponseMessage, JObject> result = await Kinect2KitAPI.POSTAsync(Kinect2KitAPI.API_NewSession, parameters);
+            Tuple<HttpResponseMessage, JObject> result = await Kinect2Kit.POSTAsync(Kinect2Kit.API_NewSession, parameters);
             return new Kinect2KitSimpleResponse(result.Item1, (string)result.Item2["message"]);
         }
 
         public static async Task<Kinect2KitSimpleResponse> StartCalibrationAsync()
         {
-            Tuple<HttpResponseMessage, JObject> result = await Kinect2KitAPI.POSTAsync(Kinect2KitAPI.API_StartCalibration);
+            Tuple<HttpResponseMessage, JObject> result = await Kinect2Kit.POSTAsync(Kinect2Kit.API_StartCalibration);
             return new Kinect2KitSimpleResponse(result.Item1, (string)result.Item2["message"]);
         }
 
         public static async Task<Kinect2KitCalibrationResponse> GetCalibrationStatus()
         {
-            Tuple<HttpResponseMessage, JObject> result = await Kinect2KitAPI.GETAsync(Kinect2KitAPI.API_CalibrationStatus);
+            Tuple<HttpResponseMessage, JObject> result = await Kinect2Kit.GETAsync(Kinect2Kit.API_CalibrationStatus);
             bool acquiring = (bool)result.Item2["acquiring"];
             int requiredFrames = (int)result.Item2["required_frames"];
             int remainedFrames = (int)result.Item2["remained_frames"];
@@ -154,13 +154,13 @@ namespace Kinect2KitAPI
 
         public static async Task<Kinect2KitSimpleResponse> StartTrackingAsync()
         {
-            Tuple<HttpResponseMessage, JObject> result = await Kinect2KitAPI.POSTAsync(Kinect2KitAPI.API_StartTracking);
+            Tuple<HttpResponseMessage, JObject> result = await Kinect2Kit.POSTAsync(Kinect2Kit.API_StartTracking);
             return new Kinect2KitSimpleResponse(result.Item1, (string)result.Item2["message"]);
         }
 
         public static async Task<Kinect2KitTrackingResponse> GetTrackingResult()
         {
-            Tuple<HttpResponseMessage, JObject> result = await Kinect2KitAPI.GETAsync(Kinect2KitAPI.API_TrackingResult);
+            Tuple<HttpResponseMessage, JObject> result = await Kinect2Kit.GETAsync(Kinect2Kit.API_TrackingResult);
             JToken trackingResult = (JToken)result.Item2["result"];
 
             double timestamp = (double)trackingResult["Timestamp"];
@@ -217,9 +217,9 @@ namespace Kinect2KitAPI
         {
             var parameters = new List<KeyValuePair<string, string>>
             {
-                new KeyValuePair<string, string>("Bodyframe", Kinect2KitAPI.GetBodyFrameJSON(timestamp, bodies))
+                new KeyValuePair<string, string>("Bodyframe", Kinect2Kit.GetBodyFrameJSON(timestamp, bodies))
             };
-            Tuple<HttpResponseMessage, JObject> result = await Kinect2KitAPI.POSTAsync(Kinect2KitAPI.API_StreamBodyFrame, parameters);
+            Tuple<HttpResponseMessage, JObject> result = await Kinect2Kit.POSTAsync(Kinect2Kit.API_StreamBodyFrame, parameters);
             return new Kinect2KitSimpleResponse(result.Item1, (string)result.Item2["message"]);
         }
         #endregion
@@ -259,13 +259,13 @@ namespace Kinect2KitAPI
         #region HTTP GET, POST for APIs
         private static string URL_For(string api)
         {
-            if (!Kinect2KitAPI.Has_ServerEndpoint)
+            if (!Kinect2Kit.Has_ServerEndpoint)
             {
                 throw new Kinect2KitServerNotSetException();
             }
             else
             {
-                return Kinect2KitAPI.ServerEndpoint + api;
+                return Kinect2Kit.ServerEndpoint + api;
             }
         }
 
@@ -276,7 +276,7 @@ namespace Kinect2KitAPI
         /// <returns></returns>
         private static async Task<Tuple<HttpResponseMessage, JObject>> GETAsync(string api)
         {
-            string url = Kinect2KitAPI.URL_For(api);
+            string url = Kinect2Kit.URL_For(api);
             using (HttpClient client = new HttpClient())
             {
                 HttpResponseMessage httpMessage = await client.GetAsync(url);
@@ -293,7 +293,7 @@ namespace Kinect2KitAPI
         /// <returns></returns>
         private static async Task<Tuple<HttpResponseMessage, JObject>> POSTAsync(string api)
         {
-            return await Kinect2KitAPI.POSTAsync(api, Kinect2KitAPI.EmptyParameters);
+            return await Kinect2Kit.POSTAsync(api, Kinect2Kit.EmptyParameters);
         }
 
         /// <summary>
@@ -304,7 +304,7 @@ namespace Kinect2KitAPI
         /// <returns></returns>
         private static async Task<Tuple<HttpResponseMessage, JObject>> POSTAsync(string api, List<KeyValuePair<string, string>> parameters)
         {
-            string url = Kinect2KitAPI.URL_For(api);
+            string url = Kinect2Kit.URL_For(api);
             FormUrlEncodedContent data = new FormUrlEncodedContent(parameters);
             using (HttpClient client = new HttpClient())
             {
