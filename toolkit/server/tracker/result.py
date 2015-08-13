@@ -1,6 +1,3 @@
-import json
-
-
 class Result(object):
     def __init__(self, timestamp):
         self.timestamp = timestamp
@@ -72,9 +69,9 @@ class Person(object):
     def get_id(self):
         return self.id
 
-    def add_skeleton(self, is_original, kinect_name, kinect_addr, joints_dict):
+    def add_skeleton(self, is_native, kinect_name, kinect_addr, joints_dict):
         self.skeletons_dict[kinect_name] = {
-            "IsOriginal": is_original,
+            "IsNative": str(is_native),
             "KinectName": kinect_name,
             "KinectIPAddress": kinect_addr,
             "Joints": joints_dict

@@ -27,8 +27,8 @@ namespace Kinect2KitAPI
         /// <summary>
         /// Kinect clients
         /// </summary>
-        private static List<Kinect2KitClientInfo> kinectClientsList = new List<Kinect2KitClientInfo>();
-        public static List<Kinect2KitClientInfo> KinectClients
+        private static List<Kinect2KitClientSetup> kinectClientsList = new List<Kinect2KitClientSetup>();
+        public static List<Kinect2KitClientSetup> KinectClients
         {
             get
             {
@@ -38,6 +38,7 @@ namespace Kinect2KitAPI
 
         #region RESTful Web APIs
         public static readonly string API_NewSession = "/session/new";
+        public static readonly string API_StopSession = "/session/stop";
         public static readonly string API_StartCalibration = "/calibration/start";
         public static readonly string API_CalibrationStatus = "/calibration/status";
         public static readonly string API_StartTracking = "/track/start";
@@ -83,7 +84,7 @@ namespace Kinect2KitAPI
 
         public static void AddKinectClient(string name, string address)
         {
-            Kinect2KitClientInfo client = new Kinect2KitClientInfo();
+            Kinect2KitClientSetup client = new Kinect2KitClientSetup();
             client.Name = name;
             client.IPAddress = address;
             Kinect2Kit.KinectClients.Add(client);
@@ -106,7 +107,7 @@ namespace Kinect2KitAPI
             {
                 return false;
             }
-            
+
             var kinects = root.Element("Kinects");
             foreach (var kinect in kinects.Elements("Kinect"))
             {
@@ -118,11 +119,6 @@ namespace Kinect2KitAPI
             return true;
         }
 
-        /// <summary>
-        /// 
-        /// </summary>
-        /// <param name="name"></param>
-        /// <returns></returns>
         public static async Task<Kinect2KitSimpleResponse> StartSessionAsync(string name)
         {
             string clients = JsonConvert.SerializeObject(Kinect2Kit.KinectClients);
@@ -131,80 +127,96 @@ namespace Kinect2KitAPI
                 new KeyValuePair<string, string>("Name", name),
                 new KeyValuePair<string, string>("Clients", clients)
             };
-            Tuple<HttpResponseMessage, JObject> result = await Kinect2Kit.POSTAsync(Kinect2Kit.API_NewSession, parameters);
-            return new Kinect2KitSimpleResponse(result.Item1, (string)result.Item2["message"]);
+            Tuple<HttpResponseMessage, JObject> resp = await Kinect2Kit.POSTAsync(Kinect2Kit.API_NewSession, parameters);
+            return new Kinect2KitSimpleResponse(resp.Item1, (string)resp.Item2["message"]);
+        }
+
+        public static async Task<Kinect2KitSimpleResponse> StopSessionAsync()
+        {
+            Tuple<HttpResponseMessage, JObject> resp = await Kinect2Kit.POSTAsync(Kinect2Kit.API_StopSession);
+            return new Kinect2KitSimpleResponse(resp.Item1, (string)resp.Item2["message"]);
         }
 
         public static async Task<Kinect2KitSimpleResponse> StartCalibrationAsync()
         {
-            Tuple<HttpResponseMessage, JObject> result = await Kinect2Kit.POSTAsync(Kinect2Kit.API_StartCalibration);
-            return new Kinect2KitSimpleResponse(result.Item1, (string)result.Item2["message"]);
+            Tuple<HttpResponseMessage, JObject> resp = await Kinect2Kit.POSTAsync(Kinect2Kit.API_StartCalibration);
+            return new Kinect2KitSimpleResponse(resp.Item1, (string)resp.Item2["message"]);
         }
 
-        public static async Task<Kinect2KitCalibrationResponse> GetCalibrationStatus()
+        public static async Task<Kinect2KitCalibrationResponse> GetCalibrationStatusAsync()
         {
-            Tuple<HttpResponseMessage, JObject> result = await Kinect2Kit.GETAsync(Kinect2Kit.API_CalibrationStatus);
-            bool acquiring = (bool)result.Item2["acquiring"];
-            int requiredFrames = (int)result.Item2["required_frames"];
-            int remainedFrames = (int)result.Item2["remained_frames"];
-            bool resolving = (bool)result.Item2["resolving"];
-            bool finished = (bool)result.Item2["finished"];
-            return new Kinect2KitCalibrationResponse(result.Item1, acquiring, requiredFrames, remainedFrames, resolving, finished);
+            Tuple<HttpResponseMessage, JObject> resp = await Kinect2Kit.GETAsync(Kinect2Kit.API_CalibrationStatus);
+            bool acquiring = (bool)resp.Item2["acquiring"];
+            int requiredFrames = (int)resp.Item2["required_frames"];
+            int remainedFrames = (int)resp.Item2["remained_frames"];
+            bool resolving = (bool)resp.Item2["resolving"];
+            bool finished = (bool)resp.Item2["finished"];
+            string error = (string)resp.Item2["error"];
+            return new Kinect2KitCalibrationResponse(resp.Item1, acquiring, requiredFrames, remainedFrames, resolving, finished, error);
         }
 
         public static async Task<Kinect2KitSimpleResponse> StartTrackingAsync()
         {
-            Tuple<HttpResponseMessage, JObject> result = await Kinect2Kit.POSTAsync(Kinect2Kit.API_StartTracking);
-            return new Kinect2KitSimpleResponse(result.Item1, (string)result.Item2["message"]);
+            Tuple<HttpResponseMessage, JObject> resp = await Kinect2Kit.POSTAsync(Kinect2Kit.API_StartTracking);
+            return new Kinect2KitSimpleResponse(resp.Item1, (string)resp.Item2["message"]);
         }
 
-        public static async Task<Kinect2KitTrackingResponse> GetTrackingResult()
+        public static async Task<Kinect2KitTrackingResponse> GetTrackingResultAsync()
         {
-            Tuple<HttpResponseMessage, JObject> result = await Kinect2Kit.GETAsync(Kinect2Kit.API_TrackingResult);
-            JToken trackingResult = (JToken)result.Item2["result"];
+            Tuple<HttpResponseMessage, JObject> resp = await Kinect2Kit.GETAsync(Kinect2Kit.API_TrackingResult);
+            
+            JToken trackingResult = (JToken)resp.Item2["result"];
 
             double timestamp = (double)trackingResult["Timestamp"];
-
-            JToken perspectives = trackingResult["Perspectives"];
             Dictionary<string, Kinect2KitPerspective> perspectivesDict = new Dictionary<string, Kinect2KitPerspective>();
-            foreach (JToken perspective in perspectives)
+
+            foreach (JToken resultPerspective in trackingResult["Perspectives"].Values())
             {
-                string kinectName = (string)perspective["KinectName"];
-                string kinectIPAddress = (string)perspective["KinectIPAddress"];
+                string kinectName = (string)resultPerspective["KinectName"];
+                Kinect2KitPerspective perspective = await JsonConvert.DeserializeObjectAsync<Kinect2KitPerspective>(resultPerspective.ToString(), null);
 
-                JToken people = perspective["People"];
-                List<Kinect2KitPerson> peopleList = new List<Kinect2KitPerson>();
-                foreach (JToken person in people)
-                {
-                    int id = (int)person["Id"];
+                perspectivesDict[kinectName] = perspective;
 
-                    JToken skeletons = person["Skeletons"];
-                    Dictionary<string, Kinect2KitSkeleton> skeletonsDict = new Dictionary<string, Kinect2KitSkeleton>();
-                    foreach (JToken skeleton in skeletons)
-                    {
-                        bool original = (bool)skeleton["IsOriginal"];
-                        string originKinectName = (string)skeleton["KinectName"];
-                        string originKinectIPAddress = (string)skeleton["KinectIPAddress"];
+                //foreach (JToken resultPerson in resultPerspective["People"])
+                //{
+                //    int id = (int)resultPerson["Id"];
 
-                        JToken joints = skeleton["Joints"];
-                        Dictionary<JointType, Joint> jointsDict = new Dictionary<JointType, Joint>();
-                        foreach (JToken joint in joints)
-                        {
-                            JointType jtType = (JointType)Enum.Parse(typeof(JointType), (string)joint["JointType"]);
-                            Joint jt = new Joint();
-                            jt.JointType = jtType;
-                            jt.Position.X = (float)joint["CameraSpacePoint"]["x"];
-                            jt.Position.Y = (float)joint["CameraSpacePoint"]["Y"];
-                            jt.Position.Z = (float)joint["CameraSpacePoint"]["Z"];
-                            jointsDict[jtType] = jt;
-                        }
-                        skeletonsDict[originKinectName] = new Kinect2KitSkeleton(original, originKinectName, originKinectIPAddress, jointsDict);
-                    }
-                    peopleList.Add(new Kinect2KitPerson(id, skeletonsDict));
-                }
-                perspectivesDict[kinectName] = new Kinect2KitPerspective(kinectName, kinectIPAddress, peopleList);
+                //    foreach (JToken resultSkeleton in resultPerson["Skeletons"].Values())
+                //    {
+                //        bool original = (bool)resultSkeleton["IsOriginal"];
+                //        string originKinectName = (string)resultSkeleton["KinectName"];
+                //        string originKinectIPAddress = (string)resultSkeleton["KinectIPAddress"];
+
+                //        foreach (JToken resultJoint in resultSkeleton["Joints"].Values())
+                //        {
+                //            JointType jointType = (JointType)Enum.Parse(typeof(JointType), (string)resultJoint["JointType"]);
+                //            TrackingState trackingState = (TrackingState)Enum.Parse(typeof(TrackingState), (string)resultJoint["TrackingState"]);
+
+                //            Kinect2KitJoint joint = new Kinect2KitJoint();
+                //            joint.JointType = jointType;
+                //            joint.TrackingState = trackingState;
+                //            joint.CameraSpacePoint.x = (float)resultJoint["CameraSpacePoint"]["x"];
+
+                //            Joint jt = new Joint();
+                //            //jt.JointType = type;
+                //            //jt.TrackingState = trackingState;
+                //            //jt.Position.X = 
+                //            //jt.Position.Y = (float)(joint["CameraSpacePoint"]["Y"]);
+                //            //jt.Position.Z = (float)(joint["CameraSpacePoint"]["Z"]);
+
+                //            jointsDict[type] = jt;
+                //        }
+
+                //        skeletonsDict[originKinectName] = new Kinect2KitSkeleton(original, originKinectName, originKinectIPAddress, jointsDict);
+                //    }
+
+                //    peopleList.Add(new Kinect2KitPerson(id, skeletonsDict));
+                //}
+
+                //perspectivesDict[kinectName] = new Kinect2KitPerspective(kinectName, kinectIPAddress, peopleList);
             }
-            return new Kinect2KitTrackingResponse(result.Item1, timestamp, perspectivesDict);
+
+            return new Kinect2KitTrackingResponse(resp.Item1, timestamp, perspectivesDict);
         }
 
         /// <summary>
@@ -219,8 +231,8 @@ namespace Kinect2KitAPI
             {
                 new KeyValuePair<string, string>("Bodyframe", Kinect2Kit.GetBodyFrameJSON(timestamp, bodies))
             };
-            Tuple<HttpResponseMessage, JObject> result = await Kinect2Kit.POSTAsync(Kinect2Kit.API_StreamBodyFrame, parameters);
-            return new Kinect2KitSimpleResponse(result.Item1, (string)result.Item2["message"]);
+            Tuple<HttpResponseMessage, JObject> resp = await Kinect2Kit.POSTAsync(Kinect2Kit.API_StreamBodyFrame, parameters);
+            return new Kinect2KitSimpleResponse(resp.Item1, (string)resp.Item2["message"]);
         }
         #endregion
 
@@ -232,23 +244,17 @@ namespace Kinect2KitAPI
             {
                 if (body.IsTracked)
                 {
-                    Kinect2KitBody toolkitBody = new Kinect2KitBody(body.TrackingId.ToString());
-                    foreach (JointType jt in body.Joints.Keys)
+                    Kinect2KitBody toolkitBody = new Kinect2KitBody(body.TrackingId.ToString(), body.ClippedEdges);
+                    foreach (JointType jointType in body.Joints.Keys)
                     {
                         Kinect2KitJoint toolkitJoint = new Kinect2KitJoint();
-                        toolkitJoint.JointType = jt.ToString();
-                        toolkitJoint.TrackingState = body.Joints[jt].TrackingState.ToString();
 
-                        toolkitJoint.Orientation.w = body.JointOrientations[jt].Orientation.W;
-                        toolkitJoint.Orientation.x = body.JointOrientations[jt].Orientation.X;
-                        toolkitJoint.Orientation.y = body.JointOrientations[jt].Orientation.Y;
-                        toolkitJoint.Orientation.z = body.JointOrientations[jt].Orientation.Z;
+                        toolkitJoint.JointType = jointType;
+                        toolkitJoint.TrackingState = body.Joints[jointType].TrackingState;
+                        toolkitJoint.Orientation = body.JointOrientations[jointType].Orientation;
+                        toolkitJoint.CameraSpacePoint = body.Joints[jointType].Position;
 
-                        toolkitJoint.CameraSpacePoint.x = body.Joints[jt].Position.X;
-                        toolkitJoint.CameraSpacePoint.y = body.Joints[jt].Position.Y;
-                        toolkitJoint.CameraSpacePoint.z = body.Joints[jt].Position.Z;
-
-                        toolkitBody.Joints[jt.ToString()] = toolkitJoint;
+                        toolkitBody.Joints[jointType] = toolkitJoint;
                     }
                     toolkitBodyFrame.Bodies.Add(toolkitBody);
                 }

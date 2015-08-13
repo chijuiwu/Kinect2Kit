@@ -4,17 +4,20 @@ class Skeleton(object):
         self.tracking_id = tracking_id
         self.kinect_body = kinect_body
         self.worldview_body = worldview_body
-        self.previous_bodies_list = list()
-        self.previous_bodies_list.append((timestamp, kinect_body, worldview_body))
         self.init_angle = init_angle
         self.init_center_position = init_center_position
 
     def update(self, timestamp, tracking_id=None, kinect_body=None, worldview_body=None):
-        self.previous_bodies_list.append((self.last_updated, self.kinect_body, self.worldview_body))
         self.last_updated = timestamp
-        self.tracking_id = tracking_id
-        self.kinect_body = kinect_body
-        self.worldview_body = worldview_body
+
+        if tracking_id is not None:
+            self.tracking_id = tracking_id
+
+        if kinect_body is not None:
+            self.kinect_body = kinect_body
+
+        if worldview_body is not None:
+            self.worldview_body = worldview_body
 
     def get_last_updated(self):
         return self.last_updated
@@ -27,9 +30,6 @@ class Skeleton(object):
 
     def get_worldview_body(self):
         return self.worldview_body
-
-    def get_previous_bodies(self):
-        return self.previous_bodies_list
 
     def get_init_angle(self):
         return self.init_angle

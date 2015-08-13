@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+using Microsoft.Kinect;
 
 namespace Kinect2KitAPI
 {
@@ -28,8 +29,9 @@ namespace Kinect2KitAPI
     public class Kinect2KitBody
     {
         public string TrackingId { get; private set; }
-        private Dictionary<string, Kinect2KitJoint> joints = new Dictionary<string, Kinect2KitJoint>();
-        public Dictionary<string, Kinect2KitJoint> Joints
+        public FrameEdges ClippedEdges { get; private set; }
+        private Dictionary<JointType, Kinect2KitJoint> joints = new Dictionary<JointType, Kinect2KitJoint>();
+        public Dictionary<JointType, Kinect2KitJoint> Joints
         {
             get
             {
@@ -37,46 +39,18 @@ namespace Kinect2KitAPI
             }
         }
 
-        public Kinect2KitBody(string trackingId)
+        public Kinect2KitBody(string trackingId, FrameEdges clippedEdges)
         {
             this.TrackingId = trackingId;
+            this.ClippedEdges = clippedEdges;
         }
     }
 
     public class Kinect2KitJoint
     {
-        public string JointType { get; set; }
-        public string TrackingState { get; set; }
-        private Kinect2KitJointOrientation orientation = new Kinect2KitJointOrientation();
-        public Kinect2KitJointOrientation Orientation
-        {
-            get
-            {
-                return this.orientation;
-            }
-        }
-        private Kinect2KitJointPosition position = new Kinect2KitJointPosition();
-        public Kinect2KitJointPosition CameraSpacePoint
-        {
-            get
-            {
-                return this.position;
-            }
-        }
-    }
-
-    public class Kinect2KitJointOrientation
-    {
-        public float w { get; set; }
-        public float x { get; set; }
-        public float y { get; set; }
-        public float z { get; set; }
-    }
-
-    public class Kinect2KitJointPosition
-    {
-        public float x { get; set; }
-        public float y { get; set; }
-        public float z { get; set; }
+        public JointType JointType { get; set; }
+        public TrackingState TrackingState { get; set; }
+        public Vector4 Orientation { get; set; }
+        public CameraSpacePoint CameraSpacePoint { get; set; }
     }
 }

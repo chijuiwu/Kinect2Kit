@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace Kinect2KitAPI
 {
-    public struct Kinect2KitClientInfo
+    public struct Kinect2KitClientSetup
     {
         public string Name { get; set; }
         public string IPAddress { get; set; }

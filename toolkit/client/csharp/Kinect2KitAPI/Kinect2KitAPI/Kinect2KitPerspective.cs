@@ -11,41 +11,47 @@ namespace Kinect2KitAPI
     {
         public string KinectName { get; private set; }
         public string KinectIPAddress { get; private set; }
-        public List<Kinect2KitPerson> People { get; private set; }
+        private List<Kinect2KitPerson> people = new List<Kinect2KitPerson>();
+        public List<Kinect2KitPerson> People
+        {
+            get
+            {
+                return this.people;
+            }
+        }
 
-        public Kinect2KitPerspective(string kinectName, string kinectIPAddress, List<Kinect2KitPerson> people)
+        public Kinect2KitPerspective(string kinectName, string kinectIPAddress)
         {
             this.KinectName = kinectName;
             this.KinectIPAddress = kinectIPAddress;
-            this.People = people;
         }
     }
 
     public class Kinect2KitPerson
     {
         public int Id { get; private set; }
-        public Dictionary<string, Kinect2KitSkeleton> Skeletons { get; private set; }
-
-        public Kinect2KitPerson(int id, Dictionary<string, Kinect2KitSkeleton> skeletons)
+        public Dictionary<string, Kinect2KitSkeleton> skeletons = new Dictionary<string, Kinect2KitSkeleton>();
+        public Dictionary<string, Kinect2KitSkeleton> Skeletons
         {
-            this.Id = id;
-            this.Skeletons = skeletons;
+            get
+            {
+                return this.skeletons;
+            }
         }
     }
 
     public class Kinect2KitSkeleton
     {
-        public bool IsOriginal { get; private set; }
+        public bool IsNative { get; private set; }
         public string KinectName { get; private set; }
         public string KinectIPAddress { get; private set; }
-        public Dictionary<JointType, Joint> Joints { get; private set; }
-
-        public Kinect2KitSkeleton(bool original, string kinectName, string kinectIPAddress, Dictionary<JointType, Joint> joints)
+        private Dictionary<JointType, Kinect2KitJoint> joints = new Dictionary<JointType, Kinect2KitJoint>();
+        public Dictionary<JointType, Kinect2KitJoint> Joints
         {
-            this.IsOriginal = original;
-            this.KinectName = kinectName;
-            this.KinectIPAddress = kinectIPAddress;
-            this.Joints = joints;
+            get
+            {
+                return this.joints;
+            }
         }
     }
 }

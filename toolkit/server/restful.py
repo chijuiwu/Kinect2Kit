@@ -21,15 +21,16 @@ def new_session():
         return jsonify(message="Failed, Invalid request"), 400
 
 
-@kinect2kit_server.route("/session/kill", methods=["POST"])
-def kill_session():
+@kinect2kit_server.route("/session/stop", methods=["POST"])
+def stop_session():
     """
     Terminate the current session
     """
 
     app_addr = request.remote_addr
     if kinect2kit_tracker.authenticate(app_addr):
-        kinect2kit_tracker.kill_session()
+        kinect2kit_tracker.write_results_to_file()
+        kinect2kit_tracker.stop_session()
         return jsonify(message="OK")
     else:
         return jsonify(message="Failed, Unauthorized access"), 401
@@ -60,8 +61,9 @@ def get_calibration_status():
     remained_frames = kinect2kit_tracker.get_remained_calibration_frames()
     resolving = kinect2kit_tracker.is_resolving_calibration()
     finished = kinect2kit_tracker.has_finished_calibration()
+    error = kinect2kit_tracker.get_calibration_error()
     return jsonify(acquiring=acquring, required_frames=required_frames, remained_frames=remained_frames,
-                   resolving=resolving, finished=finished)
+                   resolving=resolving, finished=finished, error=error)
 
 
 @kinect2kit_server.route("/track/start", methods=["POST"])
@@ -102,10 +104,10 @@ def stream_bodyframe():
         return jsonify(message="Ignored, Server does not require frames"), 400
     try:
         kinect_addr = request.remote_addr
-        bodyframe = json.loads(request.form["Bodyframe"])
         camera = kinect2kit_tracker.get_kinect(kinect_addr)
+        bodyframe = json.loads(request.form["Bodyframe"])
         if camera is not None:
-            kinect2kit_tracker.update_bodyframe(camera, bodyframe)
+            kinect2kit_tracker.on_receive_bodyframe(camera, bodyframe)
             return jsonify(message="OK")
         else:
             return jsonify(message="Ignored, Server does not recognize the client"), 400

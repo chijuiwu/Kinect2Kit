@@ -45,8 +45,10 @@ namespace Kinect2KitAPI
         public int RemainedFrames { get; private set; }
         public bool ResolvingFrames { get; private set; }
         public bool Finished { get; private set; }
+        public bool HasError { get; private set; }
+        public string Error { get; private set; }
 
-        public Kinect2KitCalibrationResponse(HttpResponseMessage httpMessage, bool acquiring, int requiredFrames, int remainFrames, bool resolving, bool finished)
+        public Kinect2KitCalibrationResponse(HttpResponseMessage httpMessage, bool acquiring, int requiredFrames, int remainFrames, bool resolving, bool finished, string error)
             : base(httpMessage)
         {
             this.AcquiringFrames = acquiring;
@@ -54,6 +56,16 @@ namespace Kinect2KitAPI
             this.RemainedFrames = remainFrames;
             this.ResolvingFrames = resolving;
             this.Finished = finished;
+            this.Error = error;
+
+            if (!this.Error.Equals(""))
+            {
+                this.HasError = true;
+            }
+            else
+            {
+                this.HasError = false;
+            }
         }
     }
 

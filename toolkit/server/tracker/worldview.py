@@ -18,8 +18,8 @@ class WorldViewCoordinateSystem:
             shoulder_l_pos = shoulder_l["CameraSpacePoint"]
             shoulder_r_pos = shoulder_r["CameraSpacePoint"]
 
-            length_opposite = float(shoulder_r_pos["z"]) - float(shoulder_l_pos["z"])
-            length_adjacent = float(shoulder_r_pos["x"]) - float(shoulder_l_pos["x"])
+            length_opposite = float(shoulder_r_pos["Z"]) - float(shoulder_l_pos["Z"])
+            length_adjacent = float(shoulder_r_pos["X"]) - float(shoulder_l_pos["X"])
 
             total_angle += math.atan2(length_opposite, length_adjacent)
 
@@ -39,9 +39,9 @@ class WorldViewCoordinateSystem:
             total_joint_z = 0
 
             for joint in s["Joints"].itervalues():
-                total_joint_x += float(joint["CameraSpacePoint"]["x"])
-                total_joint_y += float(joint["CameraSpacePoint"]["y"])
-                total_joint_z += float(joint["CameraSpacePoint"]["z"])
+                total_joint_x += float(joint["CameraSpacePoint"]["X"])
+                total_joint_y += float(joint["CameraSpacePoint"]["Y"])
+                total_joint_z += float(joint["CameraSpacePoint"]["Z"])
 
             total_body_x += total_joint_x / float(joints_count)
             total_body_y += total_joint_y / float(joints_count)
@@ -51,7 +51,7 @@ class WorldViewCoordinateSystem:
         center_y = total_body_y / float(skeletons_count)
         center_z = total_body_z / float(skeletons_count)
 
-        return {"x": center_x, "y": center_y, "z": center_z}
+        return {"X": center_x, "Y": center_y, "Z": center_z}
 
     @staticmethod
     def create_body(kinect_body, init_angle, init_center_position):
@@ -61,9 +61,9 @@ class WorldViewCoordinateSystem:
                 "JointType": {
                     "JointType": "JointType"
                     "WorldViewPoint": {
-                        "x": x,
-                        "y": y,
-                        "z": z
+                        "X": X,
+                        "Y": Y,
+                        "Z": Z
                     }
                 }
             }
@@ -74,9 +74,9 @@ class WorldViewCoordinateSystem:
 
         for joint_type, joint in kinect_body["Joints"].iteritems():
             # translation
-            translate_x = joint["CameraSpacePoint"]["x"] - init_center_position["x"]
-            translate_y = joint["CameraSpacePoint"]["y"] - init_center_position["y"]
-            translate_z = joint["CameraSpacePoint"]["z"] - init_center_position["z"]
+            translate_x = joint["CameraSpacePoint"]["X"] - init_center_position["X"]
+            translate_y = joint["CameraSpacePoint"]["Y"] - init_center_position["Y"]
+            translate_z = joint["CameraSpacePoint"]["Z"] - init_center_position["Z"]
 
             # rotation
             rotate_x = translate_x * math.cos(init_angle) + translate_z * math.sin(init_angle)
@@ -86,9 +86,9 @@ class WorldViewCoordinateSystem:
             worldview_joint = dict()
             worldview_joint["JointType"] = joint_type
             worldview_joint["WorldViewPoint"] = dict()
-            worldview_joint["WorldViewPoint"]["x"] = rotate_x
-            worldview_joint["WorldViewPoint"]["y"] = rotate_y
-            worldview_joint["WorldViewPoint"]["z"] = rotate_z
+            worldview_joint["WorldViewPoint"]["X"] = rotate_x
+            worldview_joint["WorldViewPoint"]["Y"] = rotate_y
+            worldview_joint["WorldViewPoint"]["Z"] = rotate_z
 
             worldview_body["Joints"][joint_type] = worldview_joint
 
@@ -106,8 +106,8 @@ class WorldViewCoordinateSystem:
             joint_2_coordinate = worldview_body2["Joints"][joint_type]["WorldViewPoint"]
 
             total_difference += math.sqrt(
-                math.pow(joint_1_coordinate["x"] - joint_2_coordinate["x"], 2) +
-                math.pow(joint_1_coordinate["y"] - joint_2_coordinate["y"], 2) +
-                math.pow(joint_1_coordinate["z"] - joint_2_coordinate["z"], 2))
+                math.pow(joint_1_coordinate["X"] - joint_2_coordinate["X"], 2) +
+                math.pow(joint_1_coordinate["Y"] - joint_2_coordinate["Y"], 2) +
+                math.pow(joint_1_coordinate["Z"] - joint_2_coordinate["Z"], 2))
 
         return total_difference

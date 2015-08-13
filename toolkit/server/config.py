@@ -18,15 +18,15 @@ bodyframe_format = {
                     "JointType": "JointType",
                     "TrackingState": "TrackingState",
                     "Orientation": {
-                        "w": "w",
-                        "x": "x",
-                        "y": "y",
-                        "z": "z"
+                        "W": "W",
+                        "X": "X",
+                        "Y": "Y",
+                        "Z": "Z"
                     },
                     "CameraSpacePoint": {
-                        "x": "x",
-                        "y": "y",
-                        "z": "z"
+                        "X": "X",
+                        "Y": "Y",
+                        "Z": "Z"
                     }
                 }
             }
@@ -53,9 +53,9 @@ tracking_result_format = {
                                     "JointType": "JointType",
                                     "TrackingState": "TrackingState",
                                     "CameraSpacePoint": {
-                                        "x": "x",
-                                        "y": "y",
-                                        "z": "z"
+                                        "X": "X",
+                                        "Y": "Y",
+                                        "Z": "Z"
                                     }
                                 }
                             }
