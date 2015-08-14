@@ -19,23 +19,25 @@ namespace Kinect2KitAPI
                 return this.people;
             }
         }
-
-        public Kinect2KitPerspective(string kinectName, string kinectIPAddress)
-        {
-            this.KinectName = kinectName;
-            this.KinectIPAddress = kinectIPAddress;
-        }
     }
 
     public class Kinect2KitPerson
     {
         public int Id { get; private set; }
-        public Dictionary<string, Kinect2KitSkeleton> skeletons = new Dictionary<string, Kinect2KitSkeleton>();
+        private Dictionary<string, Kinect2KitSkeleton> skeletons = new Dictionary<string, Kinect2KitSkeleton>();
         public Dictionary<string, Kinect2KitSkeleton> Skeletons
         {
             get
             {
                 return this.skeletons;
+            }
+        }
+        private Dictionary<JointType, Kinect2KitJoint> average = new Dictionary<JointType, Kinect2KitJoint>();
+        public Dictionary<JointType, Kinect2KitJoint> AverageSkeleton
+        {
+            get
+            {
+                return this.average;
             }
         }
     }

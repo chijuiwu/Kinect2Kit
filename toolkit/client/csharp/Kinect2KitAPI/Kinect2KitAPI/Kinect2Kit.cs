@@ -97,6 +97,8 @@ namespace Kinect2KitAPI
         /// <returns></returns>
         public static bool TryLoadSetup(string setupFilepath)
         {
+            // TODO: validate inputs, check clients
+
             XDocument setupDoc = XDocument.Load(setupFilepath);
             var root = setupDoc.Element("Kinect2KitSetup");
 
@@ -174,46 +176,7 @@ namespace Kinect2KitAPI
             {
                 string kinectName = (string)resultPerspective["KinectName"];
                 Kinect2KitPerspective perspective = await JsonConvert.DeserializeObjectAsync<Kinect2KitPerspective>(resultPerspective.ToString(), null);
-
                 perspectivesDict[kinectName] = perspective;
-
-                //foreach (JToken resultPerson in resultPerspective["People"])
-                //{
-                //    int id = (int)resultPerson["Id"];
-
-                //    foreach (JToken resultSkeleton in resultPerson["Skeletons"].Values())
-                //    {
-                //        bool original = (bool)resultSkeleton["IsOriginal"];
-                //        string originKinectName = (string)resultSkeleton["KinectName"];
-                //        string originKinectIPAddress = (string)resultSkeleton["KinectIPAddress"];
-
-                //        foreach (JToken resultJoint in resultSkeleton["Joints"].Values())
-                //        {
-                //            JointType jointType = (JointType)Enum.Parse(typeof(JointType), (string)resultJoint["JointType"]);
-                //            TrackingState trackingState = (TrackingState)Enum.Parse(typeof(TrackingState), (string)resultJoint["TrackingState"]);
-
-                //            Kinect2KitJoint joint = new Kinect2KitJoint();
-                //            joint.JointType = jointType;
-                //            joint.TrackingState = trackingState;
-                //            joint.CameraSpacePoint.x = (float)resultJoint["CameraSpacePoint"]["x"];
-
-                //            Joint jt = new Joint();
-                //            //jt.JointType = type;
-                //            //jt.TrackingState = trackingState;
-                //            //jt.Position.X = 
-                //            //jt.Position.Y = (float)(joint["CameraSpacePoint"]["Y"]);
-                //            //jt.Position.Z = (float)(joint["CameraSpacePoint"]["Z"]);
-
-                //            jointsDict[type] = jt;
-                //        }
-
-                //        skeletonsDict[originKinectName] = new Kinect2KitSkeleton(original, originKinectName, originKinectIPAddress, jointsDict);
-                //    }
-
-                //    peopleList.Add(new Kinect2KitPerson(id, skeletonsDict));
-                //}
-
-                //perspectivesDict[kinectName] = new Kinect2KitPerspective(kinectName, kinectIPAddress, peopleList);
             }
 
             return new Kinect2KitTrackingResponse(resp.Item1, timestamp, perspectivesDict);

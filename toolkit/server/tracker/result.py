@@ -27,6 +27,7 @@ class Result(object):
                 person_vars = dict()
                 person_vars["Id"] = person.get_id()
                 person_vars["Skeletons"] = person.get_skeletons()
+                person_vars["AverageSkeleton"] = person.get_average_skeleton()
                 perspective_vars["People"].append(person_vars)
 
             result_vars["Perspectives"][perspective_vars["KinectName"]] = perspective_vars
@@ -80,9 +81,42 @@ class Person(object):
     def get_skeletons(self):
         return self.skeletons_dict
 
-    @staticmethod
-    def get_average_skeleton():
-        pass
+    def get_average_skeleton(self):
+        # joint type as key and tuple of total joint position and count as value
+        # total joint position = sum of tracked joint positions, in terms of x, y, and z
+        total_joints_positions = dict()
+
+        for skeleton in self.skeletons_dict.itervalues():
+            print skeleton["Joints"]
+
+            for joint_type, joint in skeleton["Joints"].iteritems():
+                if joint["TrackingState"] != "Tracked":
+                    continue
+
+                print joint_type
+
+                if joint_type not in total_joints_positions:
+                    total_joints_positions[joint_type] = (joint["CameraSpacePoint"], 1)
+                else:
+                    total_position = total_joints_positions[joint_type][0]
+                    total_position["X"] += joint["CameraSpacePoint"]["X"]
+                    total_position["Y"] += joint["CameraSpacePoint"]["Y"]
+                    total_position["Z"] += joint["CameraSpacePoint"]["Z"]
+                    count = total_joints_positions[joint_type][1]
+                    count += 1
+                    total_joints_positions[joint_type] = (total_position, count)
+
+        average_skeleton = dict()
+        for joint_type, (total_position, count) in total_joints_positions.iteritems():
+            average_joint = dict()
+            average_joint["JointType"] = joint_type
+            average_joint["TrackingState"] = "Tracked"
+            average_joint["CameraSpacePoint"] = dict()
+            average_joint["CameraSpacePoint"]["X"] = total_position["X"] / float(count)
+            average_joint["CameraSpacePoint"]["Y"] = total_position["Y"] / float(count)
+            average_joint["CameraSpacePoint"]["Z"] = total_position["Z"] / float(count)
+            average_skeleton[joint_type] = average_joint
+        return average_skeleton
 
 
 def create_person(*args):
