@@ -80,6 +80,10 @@ class Person(object):
     def get_skeletons(self):
         return self.skeletons_dict
 
+    @staticmethod
+    def get_average_skeleton():
+        pass
+
 
 def create_person(*args):
     return Person(*args)

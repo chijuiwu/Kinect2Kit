@@ -73,21 +73,22 @@ class KinectCoordinateSystem:
 
             sin_angle = math.sin(init_angle)
             cos_angle = math.cos(init_angle)
-            angle_matrix = np.matrix([[cos_angle - sin_angle], [sin_angle, cos_angle]])
+            angle_matrix = np.matrix(((cos_angle, -sin_angle), (sin_angle, cos_angle)))
             inverse_angle_matrix = angle_matrix.I
 
-            translated_x = float(worldview_coordinate.x * inverse_angle_matrix.item(0, 0) +
-                                 worldview_coordinate.z * inverse_angle_matrix.item(1, 0))
-            translated_y = worldview_coordinate.y
-            translated_z = float(worldview_coordinate.x * inverse_angle_matrix.item(0, 1) +
-                                 worldview_coordinate.z * inverse_angle_matrix.item(1, 1))
+            translated_x = float(worldview_coordinate["X"] * inverse_angle_matrix.item(0, 0) +
+                                 worldview_coordinate["Z"] * inverse_angle_matrix.item(1, 0))
+            translated_y = worldview_coordinate["Y"]
+            translated_z = float(worldview_coordinate["X"] * inverse_angle_matrix.item(0, 1) +
+                                 worldview_coordinate["Z"] * inverse_angle_matrix.item(1, 1))
 
-            final_x = translated_x + init_center_position.x
-            final_y = translated_y + init_center_position.y
-            final_z = translated_z + init_center_position.z
+            final_x = translated_x + init_center_position["X"]
+            final_y = translated_y + init_center_position["Y"]
+            final_z = translated_z + init_center_position["Z"]
 
             kinect_joint = dict()
             kinect_joint["JointType"] = joint_type
+            kinect_joint["TrackingState"] = joint["TrackingState"]
             kinect_joint["CameraSpacePoint"] = dict()
             kinect_joint["CameraSpacePoint"]["x"] = final_x
             kinect_joint["CameraSpacePoint"]["Y"] = final_y

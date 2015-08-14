@@ -197,12 +197,12 @@ class Tracker(object):
                 key=lambda (c, s): WorldViewCS.calculate_joints_differences(s.get_worldview_body(),
                                                                             first_skeleton_worldview))
 
-            # find all the skeletons of the person
-            same_person_skeletons_inner_list = list()
-            for _ in itertools.repeat(None, people_count):
-                same_person_skeletons_inner_list.append(worldview_skeletons_list.pop(0))
+            # find all the skeletons of the person (count: number of people * number of kinects)
+            same_person_skeletons_list = list()
+            for _ in itertools.repeat(None, people_count * len(self.kinects_dict)):
+                same_person_skeletons_list.append(worldview_skeletons_list.pop(0))
 
-            people_list.append(same_person_skeletons_inner_list)
+            people_list.append(same_person_skeletons_list)
 
         # create multiple perspectives
         for camera in self.kinects_dict.itervalues():
@@ -212,15 +212,15 @@ class Tracker(object):
 
             # person id is the same throughout all different perspectives
             unique_person_id = 0
-            for same_person_skeletons_inner_list in people_list:
+            for same_person_skeletons_list in people_list:
                 person = result.create_person(unique_person_id)
 
                 # find the person's skeleton inside this FOV
-                native_skeleton = next(s for c, s in same_person_skeletons_inner_list if c.get_addr() == camera_addr)
+                native_skeleton = next(s for c, s in same_person_skeletons_list if c.get_addr() == camera_addr)
                 person.add_skeleton(True, camera_name, camera_addr, native_skeleton.get_kinect_body()["Joints"])
 
                 # find their other skeletons in other FOVs
-                for (c, s) in same_person_skeletons_inner_list:
+                for (c, s) in same_person_skeletons_list:
                     if c.get_addr() != camera_addr:
                         # convert worldview body to kinect body
                         kinect_body = KinectCS.create_body(s.get_worldview_body(),
@@ -278,10 +278,7 @@ class Tracker(object):
                 s.update(timestamp, tracking_id, kinect_body, worldview_body)
                 continue
 
-        # missing skeletons
-        missing_skeletons = [s for s in skeletons if s.get_last_updated() != timestamp]
-        for s in missing_skeletons:
-            s.update(timestamp)
+        # do not update missing skeletons
 
     def on_receive_bodyframe(self, camera, bodyframe):
         """

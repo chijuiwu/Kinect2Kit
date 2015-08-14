@@ -60,6 +60,7 @@ class WorldViewCoordinateSystem:
             "Joints": {
                 "JointType": {
                     "JointType": "JointType"
+                    "TrackingState": "TrackingState"
                     "WorldViewPoint": {
                         "X": X,
                         "Y": Y,
@@ -85,6 +86,7 @@ class WorldViewCoordinateSystem:
 
             worldview_joint = dict()
             worldview_joint["JointType"] = joint_type
+            worldview_joint["TrackingState"] = joint["TrackingState"]
             worldview_joint["WorldViewPoint"] = dict()
             worldview_joint["WorldViewPoint"]["X"] = rotate_x
             worldview_joint["WorldViewPoint"]["Y"] = rotate_y
@@ -100,7 +102,9 @@ class WorldViewCoordinateSystem:
             return float("inf")
 
         total_difference = 0
+
         body_joints_union = worldview_body1["Joints"].viewkeys() & worldview_body2["Joints"].viewkeys()
+
         for joint_type in body_joints_union:
             joint_1_coordinate = worldview_body1["Joints"][joint_type]["WorldViewPoint"]
             joint_2_coordinate = worldview_body2["Joints"][joint_type]["WorldViewPoint"]

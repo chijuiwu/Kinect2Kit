@@ -331,6 +331,10 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                     {
                         this.SendBodyFrame(timestamp, this.bodies);
                     }
+                    else
+                    {
+                        this.StatusText = "Stopped streaming data to the server.";
+                    }
                 }
             }
 
@@ -573,17 +577,17 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             this.streaming = !this.streaming;
             if (this.streaming)
             {
-                this.StatusText = "Streaming data to the server.";
                 this.btnStartStopStreaming.Content = "Stop";
                 this.btnStartStopStreaming.IsEnabled = true;
                 this.btnSetupKinect2KitServer.IsEnabled = false;
+                this.StatusText = "Streaming data to the server.";
             }
             else
             {
-                this.StatusText = "Stopped streaming data to the server.";
                 this.btnStartStopStreaming.Content = "Start";
                 this.btnStartStopStreaming.IsEnabled = true;
                 this.btnSetupKinect2KitServer.IsEnabled = true;
+                this.StatusText = "Stopped streaming data to the server.";
             }
         }
         #endregion
