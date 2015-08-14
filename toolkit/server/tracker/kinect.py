@@ -90,7 +90,7 @@ class KinectCoordinateSystem:
             kinect_joint["JointType"] = joint_type
             kinect_joint["TrackingState"] = joint["TrackingState"]
             kinect_joint["CameraSpacePoint"] = dict()
-            kinect_joint["CameraSpacePoint"]["x"] = final_x
+            kinect_joint["CameraSpacePoint"]["X"] = final_x
             kinect_joint["CameraSpacePoint"]["Y"] = final_y
             kinect_joint["CameraSpacePoint"]["Z"] = final_z
 

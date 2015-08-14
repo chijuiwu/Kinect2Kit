@@ -87,13 +87,10 @@ class Person(object):
         total_joints_positions = dict()
 
         for skeleton in self.skeletons_dict.itervalues():
-            print skeleton["Joints"]
-
             for joint_type, joint in skeleton["Joints"].iteritems():
-                if joint["TrackingState"] != "Tracked":
+                # value of TrackingState.Tracked is 2
+                if joint["TrackingState"] != 2:
                     continue
-
-                print joint_type
 
                 if joint_type not in total_joints_positions:
                     total_joints_positions[joint_type] = (joint["CameraSpacePoint"], 1)

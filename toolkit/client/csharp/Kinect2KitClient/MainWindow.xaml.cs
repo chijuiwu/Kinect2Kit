@@ -27,6 +27,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics
     public partial class MainWindow : Window, INotifyPropertyChanged
     {
         #region Kinect2Kit server settings
+        private string serverAddress;
+        private int serverPort;
         private bool streaming = false;
         #endregion
 
@@ -539,13 +541,10 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             this.StatusText = String.Format("Streaming BodyFrame(timestamp: {0}) to Kinect2Kit server @ {1}, Response: {2} ", timestamp, Kinect2Kit.ServerEndpoint, resp.ServerMessage);
         }
 
-        private string serverAddress;
-        private int serverPort;
-
         #region Kinect2Kit button handles
         private void Setup_Kinect2Kit_ServerAddress_Click(object sender, RoutedEventArgs e)
         {
-            SetupKinect2KitServerDialog setupServer = new SetupKinect2KitServerDialog();
+            SetupKinect2KitServerDialog setupServer = new SetupKinect2KitServerDialog(this.serverAddress, this.serverPort);
             setupServer.Owner = Application.Current.MainWindow;
             setupServer.WindowStartupLocation = WindowStartupLocation.CenterOwner;
             setupServer.ShowDialog();

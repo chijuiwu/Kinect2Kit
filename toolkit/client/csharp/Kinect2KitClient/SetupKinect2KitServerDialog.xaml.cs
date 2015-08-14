@@ -19,11 +19,19 @@ namespace Microsoft.Samples.Kinect.BodyBasics
     /// </summary>
     public partial class SetupKinect2KitServerDialog : Window
     {
-        public SetupKinect2KitServerDialog()
+        public SetupKinect2KitServerDialog(string address, int port)
         {
             InitializeComponent();
             // default
-            this.entryPort.Text = "8000";
+            this.entryIPAddress.Text = address;
+            if (port == 0)
+            {
+                this.entryPort.Text = "8000";
+            }
+            else
+            {
+                this.entryPort.Text = port.ToString();
+            }
         }
 
         private void OK_Click(object sender, RoutedEventArgs e)
