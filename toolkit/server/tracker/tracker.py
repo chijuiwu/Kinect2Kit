@@ -187,7 +187,8 @@ class Tracker(object):
             for s in camera.get_skeletons():
                 skeletons_list.append((camera, s))
 
-        # match skeletons by their spatial positions in worldview, stored as list of list
+        # match skeletons by their spatial positions in worldview, stored as list of list,
+        # where the inner list contains tuples of (camera, skeleton), as shown above
         people_list = list()
 
         # for total number of people
@@ -208,12 +209,12 @@ class Tracker(object):
 
                 # find next closest skeleton that is in another FOVs
                 while True:
-                    next_candidate_tuple = skeletons_list[i]
-                    next_candidate_addr = next_candidate_tuple[0]
-                    if next_candidate_addr not in same_person_addrs_list:
-                        skeletons_list.remove(next_candidate_tuple)
-                        same_person_skeletons_list.append(next_candidate_tuple)
-                        same_person_addrs_list.append(next_candidate_addr)
+                    next_skel_tuple = skeletons_list[i]
+                    next_skel_addr = next_skel_tuple[0]
+                    if next_skel_addr not in same_person_addrs_list:
+                        skeletons_list.remove(next_skel_tuple)
+                        same_person_skeletons_list.append(next_skel_tuple)
+                        same_person_addrs_list.append(next_skel_addr)
                         break
                     else:
                         i += 1
@@ -243,7 +244,7 @@ class Tracker(object):
                 person.add_skeleton(True, native_skeleton.get_last_updated(), camera_name, camera_addr, native_skeleton.get_kinect_body()["Joints"])
 
                 # find the person's skeletons in other FOVs
-                for (c, s) in [skel for skel in same_person_skeletons_list if skel.get_addr() != camera_addr]:
+                for (c, s) in [skel_tuple for skel_tuple in same_person_skeletons_list if skel_tuple[0].get_addr() != camera_addr]:
                     # convert worldview body to kinect body
                     kinect_body = KinectCS.create_body(s.get_worldview_body(), native_skeleton.get_init_angle(),
                                                        native_skeleton.get_init_center_position())

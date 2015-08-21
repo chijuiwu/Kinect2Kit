@@ -45,6 +45,7 @@ namespace Kinect2KitAPI
     public class Kinect2KitSkeleton
     {
         public bool IsNative { get; private set; }
+        public float LastUpdated { get; private set; }
         public string KinectName { get; private set; }
         public string KinectIPAddress { get; private set; }
         private Dictionary<JointType, Kinect2KitJoint> joints = new Dictionary<JointType, Kinect2KitJoint>();

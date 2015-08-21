@@ -71,10 +71,10 @@ class Person(object):
     def get_id(self):
         return self.id
 
-    def add_skeleton(self, last_updated, is_native, kinect_name, kinect_addr, joints_dict):
+    def add_skeleton(self, is_native, last_updated, kinect_name, kinect_addr, joints_dict):
         self.skeletons_dict[kinect_name] = {
-            "LastUpdated": last_updated,
             "IsNative": str(is_native),
+            "LastUpdated": last_updated,
             "KinectName": kinect_name,
             "KinectIPAddress": kinect_addr,
             "Joints": joints_dict
@@ -85,14 +85,13 @@ class Person(object):
 
     def calculate_average_skeleton(self):
 
-        last_updated_timestamp = max(self.skeletons_dict.values(), key=lambda s: s["LastUpdated"])["LastUpdated"]
+        last_updated_timestamp = max(self.skeletons_dict.itervalues(), key=lambda s: s["LastUpdated"])["LastUpdated"]
 
         # joint type as key and tuple of total joint position and count as value
         # total joint position = sum of tracked joint positions, in terms of x, y, and z
         total_joints_positions = dict()
 
         for skeleton in self.skeletons_dict.itervalues():
-
             # ignore old skeletons
             if abs(skeleton["LastUpdated"] - last_updated_timestamp) > 5:
                 continue
@@ -124,7 +123,7 @@ class Person(object):
             average_joint["CameraSpacePoint"]["Z"] = total_position["Z"] / float(count)
             average_skeleton[joint_type] = average_joint
             
-        return average_skeleton
+        self.average_skeleton = average_skeleton
 
     def get_average_skeleton(self):
         return self.average_skeleton
