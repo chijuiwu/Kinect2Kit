@@ -103,9 +103,9 @@ class WorldViewCoordinateSystem:
 
         total_difference = 0
 
-        body_joints_union = worldview_body1["Joints"].viewkeys() & worldview_body2["Joints"].viewkeys()
+        body_joints_intersection = set(worldview_body1["Joints"].keys()) & set(worldview_body2["Joints"].keys())
 
-        for joint_type in body_joints_union:
+        for joint_type in body_joints_intersection:
             joint_1_coordinate = worldview_body1["Joints"][joint_type]["WorldViewPoint"]
             joint_2_coordinate = worldview_body2["Joints"][joint_type]["WorldViewPoint"]
 
@@ -115,3 +115,4 @@ class WorldViewCoordinateSystem:
                 math.pow(joint_1_coordinate["Z"] - joint_2_coordinate["Z"], 2))
 
         return total_difference
+

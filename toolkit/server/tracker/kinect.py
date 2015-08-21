@@ -104,8 +104,9 @@ class KinectCoordinateSystem:
             return float("inf")
 
         total_difference = 0
-        body_joints_union = kinect_body_1["Joints"].viewkeys() & kinect_body_2["Joints"].viewkeys()
-        for joint_type in body_joints_union:
+        body_joints_intersection = set(kinect_body_1["Joints"].keys()) & set(kinect_body_2["Joints"].keys())
+
+        for joint_type in body_joints_intersection:
             joint_1_coordinate = kinect_body_1["Joints"][joint_type]["CameraSpacePoint"]
             joint_2_coordinate = kinect_body_2["Joints"][joint_type]["CameraSpacePoint"]
             total_difference += math.sqrt(
