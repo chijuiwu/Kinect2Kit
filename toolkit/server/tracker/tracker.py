@@ -228,11 +228,14 @@ class Tracker(object):
         for camera in self.kinects_dict.itervalues():
             camera_name = camera.get_name()
             camera_addr = camera.get_addr()
-            perspective = result.create_perspective(camera_name, camera_addr)
+            new_perspective = result.create_perspective(camera_name, camera_addr)
 
             # person id remains the same throughout all different perspectives
             for unique_person_id, same_person_skeletons_list in enumerate(people_list):
-                person = result.create_person(unique_person_id)
+                new_person = result.create_person(unique_person_id)
+
+                last_updated_skeleton_tuple = max(same_person_skeletons_list, key=lambda (_, s): s.get_last_updated())
+                last_updated_timestamp = last_updated_skeleton_tuple[1].get_last_updated()
 
                 # find the person's original skeleton in this FOV
                 native_skeleton = next((s for c, s in same_person_skeletons_list if c.get_addr() == camera_addr), None)
@@ -241,21 +244,34 @@ class Tracker(object):
                 if native_skeleton is None:
                     continue
 
-                person.add_skeleton(True, native_skeleton.get_last_updated(), camera_name, camera_addr, native_skeleton.get_kinect_body()["Joints"])
+                if abs(native_skeleton.get_last_updated() - last_updated_timestamp) <= 2:
+                    new_person.add_skeleton(True, camera_name, camera_addr, native_skeleton.get_kinect_body()["Joints"])
 
                 # find the person's skeletons in other FOVs
-                for (c, s) in [skel_tuple for skel_tuple in same_person_skeletons_list if skel_tuple[0].get_addr() != camera_addr]:
+                for (c, s) in [skel_tuple for skel_tuple in same_person_skeletons_list if
+                               skel_tuple[0].get_addr() != camera_addr]:
+
+                    # ignore old skeletons
+                    if abs(s.get_last_updated() - last_updated_timestamp) > 2:
+                        continue
+
                     # convert worldview body to kinect body
                     kinect_body = KinectCS.create_body(s.get_worldview_body(), native_skeleton.get_init_angle(),
                                                        native_skeleton.get_init_center_position())
-                    person.add_skeleton(False, s.get_last_updated(), c.get_name(), c.get_addr(), kinect_body["Joints"])
+                    new_person.add_skeleton(False, c.get_name(), c.get_addr(), kinect_body["Joints"])
 
-                person.calculate_average_skeleton()
-                perspective.add_person(person)
+                new_person.calculate_average_skeleton()
+                new_perspective.add_person(new_person)
 
-            new_result.add_perspective(perspective)
+            new_result.add_perspective(new_perspective)
 
         self.result = new_result
+
+        # for p in self.result.get_perspectives().itervalues():
+        #     for person in p.get_people():
+        #         for s in person.get_skeletons().itervalues():
+        #             print "detect skel head", s["Joints"]["Head"]["CameraSpacePoint"]
+        #         print "detect avg head", person.get_average_skeleton()["Head"]["CameraSpacePoint"]
 
     def start_tracking(self):
         """
