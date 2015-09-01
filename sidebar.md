@@ -1,4 +1,4 @@
-# [playground]()
+# [Kinect2Kit]()
 [![Build Status](https://travis-ci.org/cjw-charleswu/Recompute.svg?branch=master)][1]
 
 - [Github Repository](https://github.com/cjw-charleswu/Recompute/)
