@@ -31,23 +31,33 @@ You will need the following software:
 ## Install
 Git clone the repository and install the dependencies.
 
+#### Server
+Create a virtual environment for the server.
+
     $ git clone git@github.com:cjw-charleswu/Kinect2Kit.git
     $ virtualenv venv
     $ source venv/bin/activate
     (venv) $ pip install -r requirements.txt
 
-#### Server
-Host address and port numbers are optional. By default, the server will run @ localhost:8000
-
-    $ source venv/bin/activate
-    (venv) $ python run.py --host=[host] --port=[port]
-
 #### Client
-Use Visual Studio to build the projects:
+Use Visual Studio to build the following projects. You may build either the debug or release version. 
 
     $ toolkit/client/csharp/Kinect2KitAPI
     $ toolkit/client/csharp/Kinect2KitClient
 
 
+## Run
+
+#### Server
+The ip address and port number are optional.  By default, the server will run @ localhost:8000.
+
+    $ source venv/bin/activate
+    (venv) $ python run.py --host=[host] --port=[port]
+
+#### Client
+
+    $ toolkit/client/csharp/Kinect2KitClient/bin/AnyCPU/Debug/Body-Basics-WPF.exe
+
+
 ## Limitations
-The current approach works best when all Kinects are placed on the same level. In addition, it will fail when the Kinects are more than 90 degrees apart, e.g. two Kinects opposite of each other.
+The current approach works best when all Kinects are placed on the same level. In addition, it will fail when the Kinects are more than 90 degrees apart, for example, when they are opposite of each other.
