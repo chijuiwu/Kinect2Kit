@@ -31,7 +31,7 @@ You will need the following software:
 ## Install
 Git clone the repository and install the dependencies.
 
-#### Server
+## Server
 Create a virtual environment for the server.
 
     git clone git@github.com:cjw-charleswu/Kinect2Kit.git
@@ -39,7 +39,7 @@ Create a virtual environment for the server.
     source venv/bin/activate
     (venv) pip install -r requirements.txt
 
-#### Client
+## Client
 Use Visual Studio to build the following projects. You may build either the debug or release version. 
 
     $ toolkit/client/csharp/Kinect2KitAPI
@@ -48,17 +48,17 @@ Use Visual Studio to build the following projects. You may build either the debu
 
 ## Run
 
-#### Server
+## Server
 The ip address and port number are optional.  By default, the server will run @ localhost:8000.
 
     $ source venv/bin/activate
     (venv) $ python run.py --host=[host] --port=[port]
 
-#### Configuration File
+## Configuration File
 
 
 
-#### Client
+## Client
 
     $ toolkit/client/csharp/Kinect2KitClient/bin/AnyCPU/Debug/Body-Basics-WPF.exe
 
