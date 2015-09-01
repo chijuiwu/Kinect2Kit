@@ -1,56 +1,53 @@
 # Kinect2Kit
 A RESTFul web service for calibrating and tracking with multiple Kinects. Used by [Gesture Tracker](https://github.com/cjw-charleswu/GestureTracker).
 
-## How does it work?
 
+## How does it work?
 The calibration procedure is based on 3D coordinate transformation proposed in [Wei et al's paper on Kinect Skeleton Coordinate Calibration for Remote Physical Training](http://www.thinkmind.org/download.php?articleid=mmedia_2014_4_20_50039).
 
-## Applications
 
+## Applications
 * [Gesture Tracker](https://github.com/cjw-charleswu/GestureTracker)
 
+
 ## Results and papers
+You can find my undergraduate thesis titled Tracking People with Multiple Kinects [here](https://github.com/cjw-charleswu/KinectMultiTrack/blob/master/Deliverables/Report/Final/thesis.pdf). The user studies showed that the average joint difference across different scenarios are within personal space (~15cm). Average joint difference is a person's distance between their Kinect skeletons in different viewing perspectives when merged together.
 
-You can find my undergraduate thesis titled Tracking people with Multiple Kinects from [here](https://github.com/cjw-charleswu/KinectMultiTrack/blob/master/Deliverables/Report/Final/thesis.pdf). It contains empirical results and disucssion on the proposed tracking algorithm. I found that the average joint difference* across different scenarios are within personal space (~15cm). The current toolkit is an improvement over the software I developed for my thesis.
 
-*Average joint difference is a person's distance difference between their Kinect skeletons orginally from different FOVs in the same viewing perspective.
+## Documentation
+The API is available [here](http://cjw-charleswu.github.io/Kinect2Kit/).
 
-## API
 
+## Prerequisites
+You will need the following software:
+
+- The latest [Kinect v2 SDK](https://www.microsoft.com/en-us/kinectforwindows/develop/)
+- Windows 8 or abvoe
+- USB 3.0
+- Visual Studio
+- Python 2.7x
+
+
+## Install
+Git clone the repository and install the dependencies.
+
+    $ git clone git@github.com:cjw-charleswu/Kinect2Kit.git
+    $ virtualenv venv
+    $ source venv/bin/activate
+    (venv) $ pip install -r requirements.txt
+
+#### Server
+Host address and port numbers are optional. By default, the server will run @ localhost:8000
+
+    $ source venv/bin/activate
+    (venv) $ python run.py --host=[host] --port=[port]
+
+#### Client
+Use Visual Studio to build the projects:
+
+    $ toolkit/client/csharp/Kinect2KitAPI
+    $ toolkit/client/csharp/Kinect2KitClient
 
 
 ## Limitations
-
-The current approach assumes that all Kinects are placed on the same level. It does not work when the Kinects are more than 90 degrees apart, e.g. two Kinects opposite of each other.
-
-## How to run?
-#### Server
-
-- `$ source venv/bin/activate`
-- `(venv) $ python run.py --host=[host] --port=[port]`
-
-#### Client
-
-- `$ toolkit\client\csharp\Kinect2KitClient\bin\AnyCPU\Release\BodyBasics-WPF.exe`
-
-
-## Dependencies
-#### Server
-The server is written in Python, and all required modules are listed inside `requirements.txt`. Use [virtualenv](http://docs.python-guide.org/en/latest/dev/virtualenvs/).
-
-- `$ virtualenv venv`
-- `$ source venv/bin/activate`
-- `(venv) $ pip install -r requirements.txt`
-
-#### Client
-The Kinect client is written in C#. Use Visual Studio to build the project at:
-
-- `$ Kinect2Kit\toolkit\client\csharp\Kinect2KitClient\Kinect2KitClient.sln`
-
-Disclaimer: The client application is based on Body Basics-WPF in the Kinect v2 SDK. I do not own the rights to their code.
-
-#### Client API
-
-You can find the Kinect2Kit API for the client at:
-
-- `$ Kinect2Kit\toolkit\client\csharp\Kinect2KitAPI\Kinect2KitAPI.sln`
+The current approach works best when all Kinects are placed on the same level. In addition, it will fail when the Kinects are more than 90 degrees apart, e.g. two Kinects opposite of each other.
