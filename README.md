@@ -1,70 +1,66 @@
-# playground
-[![Build Status](https://travis-ci.org/chutsu/playground.png)][1]
-[![Coverage Status](https://coveralls.io/repos/chutsu/playground/badge.png)][5]
+# Kinect2Kit
+A RESTFul web service for calibrating and tracking with multiple Kinects. Used by [Gesture Tracker](https://github.com/cjw-charleswu/GestureTracker).
 
-Playground is an Meta-heuristic library implemented in Python.
-Currently features:
 
-- Hill Climbing
-- Genetic Programming
-    - Tree
-    - Cartesian (In Development)
-- Genetic Algorithm
-- Particle Swarm Optimization
+## How does it work?
+The calibration procedure is based on 3D coordinate transformation proposed in [Wei et al's paper on Kinect Skeleton Coordinate Calibration for Remote Physical Training](http://www.thinkmind.org/download.php?articleid=mmedia_2014_4_20_50039).
+
+
+## Applications
+* [Gesture Tracker](https://github.com/cjw-charleswu/GestureTracker)
+
+
+## Results and papers
+You can find my undergraduate thesis titled Tracking People with Multiple Kinects [here](https://github.com/cjw-charleswu/KinectMultiTrack/blob/master/Deliverables/Report/Final/thesis.pdf). The user studies showed that the average joint difference across different scenarios are within personal space (~15cm). Average joint difference is a person's distance between their Kinect skeletons in different viewing perspectives when merged together.
+
+
+## Documentation
+The API is available [here](http://cjw-charleswu.github.io/Kinect2Kit/).
+
+
+## Prerequisites
+You will need the following software:
+
+- The latest [Kinect v2 SDK](https://www.microsoft.com/en-us/kinectforwindows/develop/)
+- Windows 8 or abvoe
+- USB 3.0
+- Visual Studio
+- Python 2.7x
 
 
 ## Install
-Currently the best way is to clone the repo and install the dependencies:
+Git clone the repository and install the dependencies.
 
-    git clone git@github.com:chutsu/playground.git
-    pip install -r requirements.txt  # installs dependencies for playground
+#### Server
+Create a virtual environment for the server.
 
-## Examples
-At the moment the best example is the [symbolic regression][4] example.  ([what
-is symbolic regression?][3]):
+    git clone git@github.com:cjw-charleswu/Kinect2Kit.git
+    virtualenv venv
+    source venv/bin/activate
+    (venv) pip install -r requirements.txt
 
-    # curve fitting - genetic programming
-    cd examples/symbolic_regression
-    python symbolic_regression.py  # takes a while (20 generations)
+#### Client
+Use Visual Studio to build the following projects. You may build either the debug or release version. 
 
-The example uses data in `examples/symbolic_regression/sine.dat` to find the
-answer (an equation), this is also an example of data-driven search.
-
-Others include:
-
-    # HILL CLIMBING
-    # find the word "hello world!"
-    cd examples/climbing
-    python hill_climbing.py
-
-    # GENETIC ALGORITHM
-    # find the word "hello world!"
-    cd examples/hello_world
-    python hello_world.py
-
-    # PARTICLE SWARM OPTIMIZATION
-    # find the most optimal point in a x-y graph
-    cd examples/pso
-    python pso.py
+    $ toolkit/client/csharp/Kinect2KitAPI
+    $ toolkit/client/csharp/Kinect2KitClient
 
 
-## Licence
-LGPL License
-Copyright (C) <2013> Chris Choi
+## Run
 
-This program is free software: you can redistribute it and/or modify it under
-the terms of the Lesser GNU General Public License as published by the Free
-Software Foundation, either version 3 of the License, or (at your option) any
-later version.
+#### Server
+The ip address and port number are optional.  By default, the server will run @ localhost:8000.
 
-This program is distributed in the hope that it will be useful, but WITHOUT ANY
-WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A
-PARTICULAR PURPOSE.  See the GNU General Public License for more details.
+    $ source venv/bin/activate
+    (venv) $ python run.py --host=[host] --port=[port]
 
-You should have received a copy of the GNU General Public License along with
-this program.  If not, see <http://www.gnu.org/licenses/>.
+#### Configuration File
 
-[1]: https://travis-ci.org/chutsu/playground
-[3]: http://www.symbolicregression.com/?q=faq
-[4]: https://github.com/chutsu/playground/tree/master/examples/symbolic_regression
-[5]: https://coveralls.io/r/chutsu/playground
+#### Client
+Start the Kinect2KitClient application.
+
+    $ toolkit/client/csharp/Kinect2KitClient/bin/AnyCPU/Debug/Body-Basics-WPF.exe
+
+
+## Limitations
+The current approach works best when all Kinects are placed on the same level. In addition, it will fail when the Kinects are more than 90 degrees apart, for example, when they are opposite of each other.
