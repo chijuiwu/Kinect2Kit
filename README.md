@@ -34,10 +34,10 @@ Git clone the repository and install the dependencies.
 #### Server
 Create a virtual environment for the server.
 
-    $ git clone git@github.com:cjw-charleswu/Kinect2Kit.git
-    $ virtualenv venv
-    $ source venv/bin/activate
-    (venv) $ pip install -r requirements.txt
+    git clone git@github.com:cjw-charleswu/Kinect2Kit.git
+    virtualenv venv
+    source venv/bin/activate
+    (venv) pip install -r requirements.txt
 
 #### Client
 Use Visual Studio to build the following projects. You may build either the debug or release version. 
@@ -53,6 +53,10 @@ The ip address and port number are optional.  By default, the server will run @ 
 
     $ source venv/bin/activate
     (venv) $ python run.py --host=[host] --port=[port]
+
+#### Configuration File
+
+
 
 #### Client
 
