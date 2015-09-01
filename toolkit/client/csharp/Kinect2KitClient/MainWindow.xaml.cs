@@ -13,9 +13,10 @@ using System.IO;
 using System.Windows;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
+using System.Windows.Controls;
+using System.Threading.Tasks;
 using Microsoft.Kinect;
 using Kinect2KitAPI;
-using System.Threading.Tasks;
 
 namespace Microsoft.Samples.Kinect.BodyBasics
 {
@@ -108,6 +109,16 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         private BodyFrameReader bodyFrameReader = null;
 
         /// <summary>
+        /// Reader for color frames
+        /// </summary>
+        private ColorFrameReader colorFrameReader = null;
+
+        /// <summary>
+        /// Bitmap to display
+        /// </summary>
+        private WriteableBitmap colorBitmap = null;
+
+        /// <summary>
         /// Array for the bodies
         /// </summary>
         private Body[] bodies = null;
@@ -157,6 +168,15 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
             // open the reader for the body frames
             this.bodyFrameReader = this.kinectSensor.BodyFrameSource.OpenReader();
+
+            // open the reader for the color frames
+            this.colorFrameReader = this.kinectSensor.ColorFrameSource.OpenReader();
+
+            // create the colorFrameDescription from the ColorFrameSource using Bgra format
+            FrameDescription colorFrameDescription = this.kinectSensor.ColorFrameSource.CreateFrameDescription(ColorImageFormat.Bgra);
+
+            // create the bitmap to display
+            this.colorBitmap = new WriteableBitmap(colorFrameDescription.Width, colorFrameDescription.Height, 96.0, 96.0, PixelFormats.Bgr32, null);
 
             // a bone defined as a line between two joints
             this.bones = new List<Tuple<JointType, JointType>>();
@@ -280,6 +300,11 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             {
                 this.bodyFrameReader.FrameArrived += this.Reader_FrameArrived;
             }
+
+            if (this.colorFrameReader != null)
+            {
+                this.colorFrameReader.FrameArrived += this.Reader_ColorFrameArrived;
+            }
         }
 
         /// <summary>
@@ -384,6 +409,41 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
                     // prevent drawing outside of our render area
                     this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
+                }
+            }
+        }
+
+        /// <summary>
+        /// Handles the color frame data arriving from the sensor
+        /// </summary>
+        /// <param name="sender">object sending the event</param>
+        /// <param name="e">event arguments</param>
+        private void Reader_ColorFrameArrived(object sender, ColorFrameArrivedEventArgs e)
+        {
+            // ColorFrame is IDisposable
+            using (ColorFrame colorFrame = e.FrameReference.AcquireFrame())
+            {
+                if (colorFrame != null)
+                {
+                    FrameDescription colorFrameDescription = colorFrame.FrameDescription;
+
+                    using (KinectBuffer colorBuffer = colorFrame.LockRawImageBuffer())
+                    {
+                        this.colorBitmap.Lock();
+
+                        // verify data and write the new color frame data to the display bitmap
+                        if ((colorFrameDescription.Width == this.colorBitmap.PixelWidth) && (colorFrameDescription.Height == this.colorBitmap.PixelHeight))
+                        {
+                            colorFrame.CopyConvertedFrameDataToIntPtr(
+                                this.colorBitmap.BackBuffer,
+                                (uint)(colorFrameDescription.Width * colorFrameDescription.Height * 4),
+                                ColorImageFormat.Bgra);
+
+                            this.colorBitmap.AddDirtyRect(new Int32Rect(0, 0, this.colorBitmap.PixelWidth, this.colorBitmap.PixelHeight));
+                        }
+
+                        this.colorBitmap.Unlock();
+                    }
                 }
             }
         }
@@ -541,7 +601,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             this.StatusText = String.Format("Streaming BodyFrame(timestamp: {0}) to Kinect2Kit server @ {1}, Response: {2} ", timestamp, Kinect2Kit.ServerEndpoint, resp.ServerMessage);
         }
 
-        #region Kinect2Kit button handles
+        #region Kinect2Kit button handlers
         private void Setup_Kinect2Kit_ServerAddress_Click(object sender, RoutedEventArgs e)
         {
             SetupKinect2KitServerDialog setupServer = new SetupKinect2KitServerDialog(this.serverAddress, this.serverPort);
@@ -553,40 +613,114 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 this.serverAddress = setupServer.entryIPAddress.Text;
                 this.serverPort = Convert.ToInt32(setupServer.entryPort.Text);
                 this.btnStartStopStreaming.IsEnabled = true;
+                this.btnScreenshot.IsEnabled = true;
             }
             else
             {
                 this.btnStartStopStreaming.IsEnabled = false;
+                this.btnScreenshot.IsEnabled = false;
             }
         }
 
         private void Stream_BodyFrame_Click(object sender, RoutedEventArgs e)
         {
-            this.btnStartStopStreaming.IsEnabled = false;
             this.btnSetupKinect2KitServer.IsEnabled = false;
+            this.btnStartStopStreaming.IsEnabled = false;
+            this.btnScreenshot.IsEnabled = false;
 
             if (!Kinect2Kit.TrySetServerEndPoint(serverAddress, serverPort))
             {
                 MessageBox.Show(this, "The server is not available. Is it running?", "Kinect2Kit notification");
                 this.StatusText = "The server is not avaialble!!";
-                this.btnStartStopStreaming.IsEnabled = false;
                 this.btnSetupKinect2KitServer.IsEnabled = true;
+                this.btnStartStopStreaming.IsEnabled = false;
+                this.btnScreenshot.IsEnabled = false;
                 return;
             }
             this.streaming = !this.streaming;
             if (this.streaming)
             {
+                this.StatusText = "Streaming data to the server.";
+                this.btnSetupKinect2KitServer.IsEnabled = false;
                 this.btnStartStopStreaming.Content = "Stop";
                 this.btnStartStopStreaming.IsEnabled = true;
-                this.btnSetupKinect2KitServer.IsEnabled = false;
-                this.StatusText = "Streaming data to the server.";
+                this.btnScreenshot.IsEnabled = true;
             }
             else
             {
+                this.StatusText = "Stopped streaming data to the server.";
+                this.btnSetupKinect2KitServer.IsEnabled = true;
                 this.btnStartStopStreaming.Content = "Start";
                 this.btnStartStopStreaming.IsEnabled = true;
-                this.btnSetupKinect2KitServer.IsEnabled = true;
-                this.StatusText = "Stopped streaming data to the server.";
+                this.btnScreenshot.IsEnabled = true;
+            }
+        }
+        private void Screenshot_Click(object sender, RoutedEventArgs e)
+        {
+            string time = System.DateTime.Now.ToString("hh'-'mm'-'ss", CultureInfo.CurrentUICulture.DateTimeFormat);
+            
+            string myPhotos = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+
+            // Skeleton
+            if (this.imageSource != null)
+            {
+                Image drawingImage = new Image { Source = this.imageSource };
+                double width = this.imageSource.Width;
+                double height = this.imageSource.Height;
+                drawingImage.Arrange(new Rect(0, 0, width, height));
+
+                RenderTargetBitmap bitmap = new RenderTargetBitmap((int)width, (int)height, 96.0, 96.0, PixelFormats.Pbgra32);
+                bitmap.Render(drawingImage);
+
+                // create a png bitmap encoder which knows how to save a .png file
+                BitmapEncoder encoder = new PngBitmapEncoder();
+
+                // create frame from the writable bitmap and add to encoder
+                encoder.Frames.Add(BitmapFrame.Create(bitmap));
+
+                string path = Path.Combine(myPhotos, "Kinect2KitClient-Skeleton-" + time + ".png");
+
+                // write the new file to disk
+                try
+                {
+                    // FileStream is IDisposable
+                    using (FileStream fs = new FileStream(path, FileMode.Create))
+                    {
+                        encoder.Save(fs);
+                    }
+                    this.StatusText = string.Format("Saved screenshot to {0}", path);
+                }
+                catch (IOException)
+                {
+                    this.StatusText = string.Format("Failed to write screenshot to {0}", path);
+                }
+            }
+
+            // Color
+            if (this.colorBitmap != null)
+            {
+                // create a png bitmap encoder which knows how to save a .png file
+                BitmapEncoder encoder = new PngBitmapEncoder();
+
+                // create frame from the writable bitmap and add to encoder
+                encoder.Frames.Add(BitmapFrame.Create(this.colorBitmap));
+
+                string path = Path.Combine(myPhotos, "Kinect2KitClient-Color-" + time + ".png");
+
+                // write the new file to disk
+                try
+                {
+                    // FileStream is IDisposable
+                    using (FileStream fs = new FileStream(path, FileMode.Create))
+                    {
+                        encoder.Save(fs);
+                    }
+                    this.StatusText = string.Format("Saved screenshot to {0}", path);
+                }
+                catch (IOException)
+                {
+                    this.StatusText = string.Format("Failed to write screenshot to {0}", path);
+                }
             }
         }
         #endregion
