@@ -6,7 +6,9 @@ A RESTFul web service for calibrating and tracking with multiple Kinects. Used b
 
 
 ## Results and papers
-You can find my undergraduate thesis titled Tracking People with Multiple Kinects [here][2]. The user studies showed that the average joint difference across different scenarios are within personal space (~15cm). Average joint difference is a person's distance between their Kinect skeletons in different viewing perspectives when merged together.
+My undergraduate thesis, [Tracking People with Multiple Kinects][2], discusses the original system. The user studies showed that the average joint difference across different scenarios are within personal space (~15cm). Average joint difference is a person's distance between their Kinect skeletons in different viewing perspectives when merged together.
+
+A new paper is being written about the current toolkit, previous and new user studies.
 
 
 ## Documentation
@@ -42,7 +44,17 @@ Use Visual Studio to build the following projects. You may build either the debu
     $ Kinect2Kit/toolkit/client/csharp/Kinect2KitClient
 
 #### Example Application: Gesture Tracker
+Build the Kinect2KitAPI from the Kinect2Kit using Visual Studio.
 
+	$ Kinect2Kit/toolkit/client/csharp/Kinect2KitAPI
+
+Clone the Gesture Tracker application.
+
+	git clone git@github.com:cjw-charleswu/GestureTracker.git
+
+Build the the application using Visual Studio. You may need to fix the Kinect2KitAPI reference path.
+
+	$ GestureTracker/GestureTracker/GestureTracker
 
 
 ## Run
