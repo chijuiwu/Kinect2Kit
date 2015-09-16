@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.Globalization;
 using System.IO;
 using System.Windows;
+using System.Windows.Shapes;
 using System.Windows.Media;
 using System.Windows.Media.Imaging;
 using System.Windows.Controls;
@@ -72,6 +73,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// Brush used for drawing joints that are currently tracked
         /// </summary>
         private readonly Brush trackedJointBrush = new SolidColorBrush(Color.FromArgb(255, 68, 192, 68));
+        //private readonly Brush trackedJointBrush = new SolidColorBrush(Color.FromArgb(255, 255, 50, 50));
 
         /// <summary>
         /// Brush used for drawing joints that are currently inferred
@@ -117,6 +119,8 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// Bitmap to display
         /// </summary>
         private WriteableBitmap colorBitmap = null;
+
+        private DrawingImage colorImageSource;
 
         /// <summary>
         /// Array for the bodies
@@ -264,6 +268,14 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             }
         }
 
+        public ImageSource CameraImageSource
+        {
+            get
+            {
+                return this.colorBitmap;
+            }
+        }
+
         /// <summary>
         /// Gets or sets the current status text to display
         /// </summary>
@@ -367,10 +379,12 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
             if (dataReceived)
             {
-                using (DrawingContext dc = this.drawingGroup.Open())
-                {
+                //using (DrawingContext dc = this.drawingGroup.Open())
+                //{
                     // Draw a transparent background to set the render size
-                    dc.DrawRectangle(Brushes.Black, null, new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
+                    //dc.DrawRectangle(Brushes.Black, null, new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
+
+                this.SkeletonCanvas.Children.Clear();
 
                     int penIndex = 0;
                     foreach (Body body in this.bodies)
@@ -379,7 +393,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
                         if (body.IsTracked)
                         {
-                            this.DrawClippedEdges(body, dc);
+                            //this.DrawClippedEdges(body, dc);
 
                             IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
 
@@ -396,16 +410,28 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                                     position.Z = InferredZPositionClamp;
                                 }
 
+                                Point point = new Point();
+
                                 DepthSpacePoint depthSpacePoint = this.coordinateMapper.MapCameraPointToDepthSpace(position);
-                                jointPoints[jointType] = new Point(depthSpacePoint.X, depthSpacePoint.Y);
+                                ColorSpacePoint colorSpacePoint = this.coordinateMapper.MapCameraPointToColorSpace(position);
+
+                                point.X = float.IsInfinity(colorSpacePoint.X) ? 0 : colorSpacePoint.X;
+                                point.Y = float.IsInfinity(colorSpacePoint.Y) ? 0 : colorSpacePoint.Y;
+
+                                if (point.X == 0 && point.Y == 0)
+                                {
+                                    continue;
+                                }
+
+                                jointPoints[jointType] = point;
                             }
 
-                            this.DrawBody(joints, jointPoints, dc, drawPen);
+                            this.DrawBody(joints, jointPoints, drawPen);
 
-                            this.DrawHand(body.HandLeftState, jointPoints[JointType.HandLeft], dc);
-                            this.DrawHand(body.HandRightState, jointPoints[JointType.HandRight], dc);
+                            //this.DrawHand(body.HandLeftState, jointPoints[JointType.HandLeft]);
+                            //this.DrawHand(body.HandRightState, jointPoints[JointType.HandRight]);
                         }
-                    }
+                    //}
 
                     // prevent drawing outside of our render area
                     this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
@@ -460,7 +486,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             // Draw the bones
             foreach (var bone in this.bones)
             {
-                this.DrawBone(joints, jointPoints, bone.Item1, bone.Item2, drawingContext, drawingPen);
+                //this.DrawBone(joints, jointPoints, bone.Item1, bone.Item2, drawingContext, drawingPen);
             }
 
             // Draw the joints
@@ -482,6 +508,54 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 if (drawBrush != null)
                 {
                     drawingContext.DrawEllipse(drawBrush, null, jointPoints[jointType], JointThickness, JointThickness);
+                }
+            }
+        }
+
+        private void DrawBody(IReadOnlyDictionary<JointType, Joint> joints, IDictionary<JointType, Point> jointPoints, Pen drawingPen)
+        {
+            // Draw the bones
+            foreach (var bone in this.bones)
+            {
+                this.DrawBone(joints, jointPoints, bone.Item1, bone.Item2, drawingPen);
+            }
+
+            // Draw the joints
+            foreach (JointType jointType in joints.Keys)
+            {
+                if (!jointPoints.ContainsKey(jointType))
+                {
+                    continue;
+                }
+
+                Brush drawBrush = null;
+
+                TrackingState trackingState = joints[jointType].TrackingState;
+
+                if (trackingState == TrackingState.Tracked)
+                {
+                    drawBrush = this.trackedJointBrush;
+                }
+                else if (trackingState == TrackingState.Inferred)
+                {
+                    drawBrush = this.inferredJointBrush;
+                }
+
+                if (drawBrush != null)
+                {
+                    Ellipse joint = new Ellipse
+                    {
+                        Fill = drawBrush,
+                        Width = 30,
+                        Height = 30,
+                    };
+
+                    Point point = jointPoints[jointType];
+                    Canvas.SetLeft(joint, point.X - joint.Width / 2);
+                    Canvas.SetTop(joint, point.Y - joint.Height / 2);
+                    this.SkeletonCanvas.Children.Add(joint);
+                    //drawingContext.DrawEllipse(drawBrush, null, jointPoints[jointType], JointThickness, JointThickness);
+
                 }
             }
         }
@@ -515,6 +589,45 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             }
 
             drawingContext.DrawLine(drawPen, jointPoints[jointType0], jointPoints[jointType1]);
+        }
+
+        private void DrawBone(IReadOnlyDictionary<JointType, Joint> joints, IDictionary<JointType, Point> jointPoints, JointType jointType0, JointType jointType1, Pen drawingPen)
+        {
+            Joint joint0 = joints[jointType0];
+            Joint joint1 = joints[jointType1];
+
+            // If we can't find either of these joints, exit
+            if (joint0.TrackingState == TrackingState.NotTracked ||
+                joint1.TrackingState == TrackingState.NotTracked)
+            {
+                return;
+            }
+
+            // We assume all drawn bones are inferred unless BOTH joints are tracked
+            Pen drawPen = this.inferredBonePen;
+            if ((joint0.TrackingState == TrackingState.Tracked) && (joint1.TrackingState == TrackingState.Tracked))
+            {
+                drawPen = drawingPen;
+            }
+
+            if (!jointPoints.ContainsKey(jointType0) || !jointPoints.ContainsKey(jointType1))
+            {
+                return;
+            }
+
+            Point point1 = jointPoints[jointType0];
+            Point point2 = jointPoints[jointType1];
+
+            Line bone = new Line
+            {
+                Stroke = drawingPen.Brush,
+                StrokeThickness = 10,
+                X1 = point1.X,
+                Y1 = point1.Y,
+                X2 = point2.X,
+                Y2 = point2.Y
+            };
+            this.SkeletonCanvas.Children.Add(bone);
         }
 
         /// <summary>
@@ -678,7 +791,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 // create frame from the writable bitmap and add to encoder
                 encoder.Frames.Add(BitmapFrame.Create(bitmap));
 
-                string path = Path.Combine(myPhotos, "Kinect2KitClient-Skeleton-" + time + ".png");
+                string path = System.IO.Path.Combine(myPhotos, "Kinect2KitClient-Skeleton-" + time + ".png");
 
                 // write the new file to disk
                 try
@@ -705,7 +818,7 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 // create frame from the writable bitmap and add to encoder
                 encoder.Frames.Add(BitmapFrame.Create(this.colorBitmap));
 
-                string path = Path.Combine(myPhotos, "Kinect2KitClient-Color-" + time + ".png");
+                string path = System.IO.Path.Combine(myPhotos, "Kinect2KitClient-Color-" + time + ".png");
 
                 // write the new file to disk
                 try
