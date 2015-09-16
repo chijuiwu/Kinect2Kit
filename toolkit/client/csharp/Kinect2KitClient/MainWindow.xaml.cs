@@ -91,11 +91,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         private DrawingGroup drawingGroup;
 
         /// <summary>
-        /// Drawing image that we will display
-        /// </summary>
-        private DrawingImage imageSource;
-
-        /// <summary>
         /// Active Kinect sensor
         /// </summary>
         private KinectSensor kinectSensor = null;
@@ -119,8 +114,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// Bitmap to display
         /// </summary>
         private WriteableBitmap colorBitmap = null;
-
-        private DrawingImage colorImageSource;
 
         /// <summary>
         /// Array for the bodies
@@ -242,9 +235,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             // Create the drawing group we'll use for drawing
             this.drawingGroup = new DrawingGroup();
 
-            // Create an image source that we can use in our image control
-            this.imageSource = new DrawingImage(this.drawingGroup);
-
             // use the window object as the view model in this simple example
             this.DataContext = this;
 
@@ -256,17 +246,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// INotifyPropertyChangedPropertyChanged event to allow window controls to bind to changeable data
         /// </summary>
         public event PropertyChangedEventHandler PropertyChanged;
-
-        /// <summary>
-        /// Gets the bitmap to display
-        /// </summary>
-        public ImageSource ImageSource
-        {
-            get
-            {
-                return this.imageSource;
-            }
-        }
 
         public ImageSource CameraImageSource
         {
@@ -331,6 +310,12 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 // BodyFrameReader is IDisposable
                 this.bodyFrameReader.Dispose();
                 this.bodyFrameReader = null;
+            }
+
+            if (this.colorFrameReader != null)
+            {
+                this.colorFrameReader.Dispose();
+                this.colorFrameReader = null;
             }
 
             if (this.kinectSensor != null)
@@ -481,37 +466,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// <param name="jointPoints">translated positions of joints to draw</param>
         /// <param name="drawingContext">drawing context to draw to</param>
         /// <param name="drawingPen">specifies color to draw a specific body</param>
-        private void DrawBody(IReadOnlyDictionary<JointType, Joint> joints, IDictionary<JointType, Point> jointPoints, DrawingContext drawingContext, Pen drawingPen)
-        {
-            // Draw the bones
-            foreach (var bone in this.bones)
-            {
-                //this.DrawBone(joints, jointPoints, bone.Item1, bone.Item2, drawingContext, drawingPen);
-            }
-
-            // Draw the joints
-            foreach (JointType jointType in joints.Keys)
-            {
-                Brush drawBrush = null;
-
-                TrackingState trackingState = joints[jointType].TrackingState;
-
-                if (trackingState == TrackingState.Tracked)
-                {
-                    drawBrush = this.trackedJointBrush;
-                }
-                else if (trackingState == TrackingState.Inferred)
-                {
-                    drawBrush = this.inferredJointBrush;
-                }
-
-                if (drawBrush != null)
-                {
-                    drawingContext.DrawEllipse(drawBrush, null, jointPoints[jointType], JointThickness, JointThickness);
-                }
-            }
-        }
-
         private void DrawBody(IReadOnlyDictionary<JointType, Joint> joints, IDictionary<JointType, Point> jointPoints, Pen drawingPen)
         {
             // Draw the bones
@@ -569,28 +523,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// <param name="jointType1">second joint of bone to draw</param>
         /// <param name="drawingContext">drawing context to draw to</param>
         /// /// <param name="drawingPen">specifies color to draw a specific bone</param>
-        private void DrawBone(IReadOnlyDictionary<JointType, Joint> joints, IDictionary<JointType, Point> jointPoints, JointType jointType0, JointType jointType1, DrawingContext drawingContext, Pen drawingPen)
-        {
-            Joint joint0 = joints[jointType0];
-            Joint joint1 = joints[jointType1];
-
-            // If we can't find either of these joints, exit
-            if (joint0.TrackingState == TrackingState.NotTracked ||
-                joint1.TrackingState == TrackingState.NotTracked)
-            {
-                return;
-            }
-
-            // We assume all drawn bones are inferred unless BOTH joints are tracked
-            Pen drawPen = this.inferredBonePen;
-            if ((joint0.TrackingState == TrackingState.Tracked) && (joint1.TrackingState == TrackingState.Tracked))
-            {
-                drawPen = drawingPen;
-            }
-
-            drawingContext.DrawLine(drawPen, jointPoints[jointType0], jointPoints[jointType1]);
-        }
-
         private void DrawBone(IReadOnlyDictionary<JointType, Joint> joints, IDictionary<JointType, Point> jointPoints, JointType jointType0, JointType jointType1, Pen drawingPen)
         {
             Joint joint0 = joints[jointType0];
@@ -775,21 +707,21 @@ namespace Microsoft.Samples.Kinect.BodyBasics
             string myPhotos = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
 
             // Skeleton
-            if (this.imageSource != null)
+            if (this.colorBitmap != null)
             {
-                Image drawingImage = new Image { Source = this.imageSource };
-                double width = this.imageSource.Width;
-                double height = this.imageSource.Height;
-                drawingImage.Arrange(new Rect(0, 0, width, height));
+                //Image drawingImage = new Image { Source = this.colorBitmap };
+                //double width = this.colorBitmap.Width;
+                //double height = this.colorBitmap.Height;
+                //drawingImage.Arrange(new Rect(0, 0, width, height));
 
-                RenderTargetBitmap bitmap = new RenderTargetBitmap((int)width, (int)height, 96.0, 96.0, PixelFormats.Pbgra32);
-                bitmap.Render(drawingImage);
+                //RenderTargetBitmap bitmap = new RenderTargetBitmap((int)width, (int)height, 96.0, 96.0, PixelFormats.Pbgra32);
+                //bitmap.Render(drawingImage);
 
                 // create a png bitmap encoder which knows how to save a .png file
                 BitmapEncoder encoder = new PngBitmapEncoder();
 
                 // create frame from the writable bitmap and add to encoder
-                encoder.Frames.Add(BitmapFrame.Create(bitmap));
+                encoder.Frames.Add(BitmapFrame.Create(this.colorBitmap));
 
                 string path = System.IO.Path.Combine(myPhotos, "Kinect2KitClient-Skeleton-" + time + ".png");
 
