@@ -658,12 +658,10 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 this.serverAddress = setupServer.entryIPAddress.Text;
                 this.serverPort = Convert.ToInt32(setupServer.entryPort.Text);
                 this.btnStartStopStreaming.IsEnabled = true;
-                this.btnScreenshot.IsEnabled = true;
             }
             else
             {
                 this.btnStartStopStreaming.IsEnabled = false;
-                this.btnScreenshot.IsEnabled = false;
             }
         }
 
@@ -671,7 +669,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         {
             this.btnSetupKinect2KitServer.IsEnabled = false;
             this.btnStartStopStreaming.IsEnabled = false;
-            this.btnScreenshot.IsEnabled = false;
 
             if (!Kinect2Kit.TrySetServerEndPoint(serverAddress, serverPort))
             {
@@ -679,7 +676,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 this.StatusText = "The server is not avaialble!!";
                 this.btnSetupKinect2KitServer.IsEnabled = true;
                 this.btnStartStopStreaming.IsEnabled = false;
-                this.btnScreenshot.IsEnabled = false;
                 return;
             }
             this.streaming = !this.streaming;
@@ -689,7 +685,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 this.btnSetupKinect2KitServer.IsEnabled = false;
                 this.btnStartStopStreaming.Content = "Stop";
                 this.btnStartStopStreaming.IsEnabled = true;
-                this.btnScreenshot.IsEnabled = true;
             }
             else
             {
@@ -697,75 +692,44 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                 this.btnSetupKinect2KitServer.IsEnabled = true;
                 this.btnStartStopStreaming.Content = "Start";
                 this.btnStartStopStreaming.IsEnabled = true;
-                this.btnScreenshot.IsEnabled = true;
             }
         }
         private void Screenshot_Click(object sender, RoutedEventArgs e)
         {
-            string time = System.DateTime.Now.ToString("hh'-'mm'-'ss", CultureInfo.CurrentUICulture.DateTimeFormat);
-            
-            string myPhotos = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
 
-            // Skeleton
-            if (this.colorBitmap != null)
+            Rect bounds = VisualTreeHelper.GetDescendantBounds(this.KinectClientWindow);
+            RenderTargetBitmap renderTarget = new RenderTargetBitmap((Int32)bounds.Width, (Int32)bounds.Height, 96, 96, PixelFormats.Pbgra32);
+
+            DrawingVisual visual = new DrawingVisual();
+            using (DrawingContext context = visual.RenderOpen())
             {
-                //Image drawingImage = new Image { Source = this.colorBitmap };
-                //double width = this.colorBitmap.Width;
-                //double height = this.colorBitmap.Height;
-                //drawingImage.Arrange(new Rect(0, 0, width, height));
-
-                //RenderTargetBitmap bitmap = new RenderTargetBitmap((int)width, (int)height, 96.0, 96.0, PixelFormats.Pbgra32);
-                //bitmap.Render(drawingImage);
-
-                // create a png bitmap encoder which knows how to save a .png file
-                BitmapEncoder encoder = new PngBitmapEncoder();
-
-                // create frame from the writable bitmap and add to encoder
-                encoder.Frames.Add(BitmapFrame.Create(this.colorBitmap));
-
-                string path = System.IO.Path.Combine(myPhotos, "Kinect2KitClient-Skeleton-" + time + ".png");
-
-                // write the new file to disk
-                try
-                {
-                    // FileStream is IDisposable
-                    using (FileStream fs = new FileStream(path, FileMode.Create))
-                    {
-                        encoder.Save(fs);
-                    }
-                    this.StatusText = string.Format("Saved screenshot to {0}", path);
-                }
-                catch (IOException)
-                {
-                    this.StatusText = string.Format("Failed to write screenshot to {0}", path);
-                }
+                VisualBrush visualBrush = new VisualBrush(this.KinectClientWindow);
+                context.DrawRectangle(visualBrush, null, new Rect(new Point(), bounds.Size));
             }
 
-            // Color
-            if (this.colorBitmap != null)
+            renderTarget.Render(visual);
+
+            PngBitmapEncoder bitmapEncoder = new PngBitmapEncoder();
+            bitmapEncoder.Frames.Add(BitmapFrame.Create(renderTarget));
+
+            string time = System.DateTime.Now.ToString("hh'-'mm'-'ss", CultureInfo.CurrentUICulture.DateTimeFormat);
+            string myPhotos = Environment.GetFolderPath(Environment.SpecialFolder.MyPictures);
+            string path = System.IO.Path.Combine(myPhotos, "Kinect2KitClient-" + time + ".png");
+
+            // write the new file to disk
+            try
             {
-                // create a png bitmap encoder which knows how to save a .png file
-                BitmapEncoder encoder = new PngBitmapEncoder();
-
-                // create frame from the writable bitmap and add to encoder
-                encoder.Frames.Add(BitmapFrame.Create(this.colorBitmap));
-
-                string path = System.IO.Path.Combine(myPhotos, "Kinect2KitClient-Color-" + time + ".png");
-
-                // write the new file to disk
-                try
+                // FileStream is IDisposable
+                using (FileStream fs = new FileStream(path, FileMode.Create))
                 {
-                    // FileStream is IDisposable
-                    using (FileStream fs = new FileStream(path, FileMode.Create))
-                    {
-                        encoder.Save(fs);
-                    }
-                    this.StatusText = string.Format("Saved screenshot to {0}", path);
+                    bitmapEncoder.Save(fs);
                 }
-                catch (IOException)
-                {
-                    this.StatusText = string.Format("Failed to write screenshot to {0}", path);
-                }
+
+                this.StatusText = string.Format("Saved screenshot to {0}", path);
+            }
+            catch (IOException)
+            {
+                this.StatusText = string.Format("Failed to write screenshot to {0}", path);
             }
         }
         #endregion
