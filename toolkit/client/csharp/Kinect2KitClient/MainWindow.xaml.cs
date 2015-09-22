@@ -73,7 +73,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         /// Brush used for drawing joints that are currently tracked
         /// </summary>
         private readonly Brush trackedJointBrush = new SolidColorBrush(Color.FromArgb(255, 68, 192, 68));
-        //private readonly Brush trackedJointBrush = new SolidColorBrush(Color.FromArgb(255, 255, 50, 50));
 
         /// <summary>
         /// Brush used for drawing joints that are currently inferred
@@ -364,62 +363,55 @@ namespace Microsoft.Samples.Kinect.BodyBasics
 
             if (dataReceived)
             {
-                //using (DrawingContext dc = this.drawingGroup.Open())
-                //{
-                    // Draw a transparent background to set the render size
-                    //dc.DrawRectangle(Brushes.Black, null, new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
-
                 this.SkeletonCanvas.Children.Clear();
 
-                    int penIndex = 0;
-                    foreach (Body body in this.bodies)
+                int penIndex = 0;
+                foreach (Body body in this.bodies)
+                {
+                    Pen drawPen = this.bodyColors[penIndex++];
+
+                    if (body.IsTracked)
                     {
-                        Pen drawPen = this.bodyColors[penIndex++];
+                        //this.DrawClippedEdges(body, dc);
 
-                        if (body.IsTracked)
+                        IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
+
+                        // convert the joint points to depth (display) space
+                        Dictionary<JointType, Point> jointPoints = new Dictionary<JointType, Point>();
+
+                        foreach (JointType jointType in joints.Keys)
                         {
-                            //this.DrawClippedEdges(body, dc);
-
-                            IReadOnlyDictionary<JointType, Joint> joints = body.Joints;
-
-                            // convert the joint points to depth (display) space
-                            Dictionary<JointType, Point> jointPoints = new Dictionary<JointType, Point>();
-
-                            foreach (JointType jointType in joints.Keys)
+                            // sometimes the depth(Z) of an inferred joint may show as negative
+                            // clamp down to 0.1f to prevent coordinatemapper from returning (-Infinity, -Infinity)
+                            CameraSpacePoint position = joints[jointType].Position;
+                            if (position.Z < 0)
                             {
-                                // sometimes the depth(Z) of an inferred joint may show as negative
-                                // clamp down to 0.1f to prevent coordinatemapper from returning (-Infinity, -Infinity)
-                                CameraSpacePoint position = joints[jointType].Position;
-                                if (position.Z < 0)
-                                {
-                                    position.Z = InferredZPositionClamp;
-                                }
-
-                                Point point = new Point();
-
-                                DepthSpacePoint depthSpacePoint = this.coordinateMapper.MapCameraPointToDepthSpace(position);
-                                ColorSpacePoint colorSpacePoint = this.coordinateMapper.MapCameraPointToColorSpace(position);
-
-                                point.X = float.IsInfinity(colorSpacePoint.X) ? 0 : colorSpacePoint.X;
-                                point.Y = float.IsInfinity(colorSpacePoint.Y) ? 0 : colorSpacePoint.Y;
-
-                                if (point.X == 0 && point.Y == 0)
-                                {
-                                    continue;
-                                }
-
-                                jointPoints[jointType] = point;
+                                position.Z = InferredZPositionClamp;
                             }
 
-                            this.DrawBody(joints, jointPoints, drawPen);
+                            Point point = new Point();
 
-                            //this.DrawHand(body.HandLeftState, jointPoints[JointType.HandLeft]);
-                            //this.DrawHand(body.HandRightState, jointPoints[JointType.HandRight]);
+                            DepthSpacePoint depthSpacePoint = this.coordinateMapper.MapCameraPointToDepthSpace(position);
+                            ColorSpacePoint colorSpacePoint = this.coordinateMapper.MapCameraPointToColorSpace(position);
+
+                            point.X = float.IsInfinity(colorSpacePoint.X) ? 0 : colorSpacePoint.X;
+                            point.Y = float.IsInfinity(colorSpacePoint.Y) ? 0 : colorSpacePoint.Y;
+
+                            if (point.X == 0 && point.Y == 0)
+                            {
+                                continue;
+                            }
+
+                            jointPoints[jointType] = point;
                         }
-                    //}
+
+                        this.DrawBody(joints, jointPoints, drawPen);
+                        //this.DrawHand(body.HandLeftState, jointPoints[JointType.HandLeft]);
+                        //this.DrawHand(body.HandRightState, jointPoints[JointType.HandRight]);
+                    }
 
                     // prevent drawing outside of our render area
-                    this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
+                    //this.drawingGroup.ClipGeometry = new RectangleGeometry(new Rect(0.0, 0.0, this.displayWidth, this.displayHeight));
                 }
             }
         }
@@ -508,8 +500,6 @@ namespace Microsoft.Samples.Kinect.BodyBasics
                     Canvas.SetLeft(joint, point.X - joint.Width / 2);
                     Canvas.SetTop(joint, point.Y - joint.Height / 2);
                     this.SkeletonCanvas.Children.Add(joint);
-                    //drawingContext.DrawEllipse(drawBrush, null, jointPoints[jointType], JointThickness, JointThickness);
-
                 }
             }
         }
@@ -697,13 +687,13 @@ namespace Microsoft.Samples.Kinect.BodyBasics
         private void Screenshot_Click(object sender, RoutedEventArgs e)
         {
 
-            Rect bounds = VisualTreeHelper.GetDescendantBounds(this.KinectClientWindow);
+            Rect bounds = VisualTreeHelper.GetDescendantBounds(this.KinectClientViewbox);
             RenderTargetBitmap renderTarget = new RenderTargetBitmap((Int32)bounds.Width, (Int32)bounds.Height, 96, 96, PixelFormats.Pbgra32);
 
             DrawingVisual visual = new DrawingVisual();
             using (DrawingContext context = visual.RenderOpen())
             {
-                VisualBrush visualBrush = new VisualBrush(this.KinectClientWindow);
+                VisualBrush visualBrush = new VisualBrush(this.KinectClientViewbox);
                 context.DrawRectangle(visualBrush, null, new Rect(new Point(), bounds.Size));
             }
 
