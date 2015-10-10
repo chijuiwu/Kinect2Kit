@@ -1,7 +1,7 @@
 # [Kinect2Kit]()
 <!-- [![Build Status](https://travis-ci.org/cjw-charleswu/Recompute.svg?branch=master)][1] -->
 
-- [Github Repository][Kinect2Kit_repo]
+[Github Repository][Kinect2Kit_repo]
 
 [ditto:searchbar]
 
@@ -12,7 +12,7 @@
 
 ## Toolkit API
 - [session](#docs/api/session/session)
-	- [configuration](#docs/api/session/configuration)
+    - [configuration](#docs/api/session/configuration)
     - [start](#docs/api/benchmark/analyzer)
     - [stop](#docs/api/benchmark/log_analyzer)
     - [add_kinect](#docs/api/benchmark/analyzer)

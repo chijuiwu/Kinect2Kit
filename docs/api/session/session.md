@@ -2,7 +2,7 @@
 The Kinect2Kit session API allows developers to start a new tracking session with an environment specification.
 
 
-## POST
+## POST - "/session/new"
 
 
     Parameters:
@@ -26,6 +26,21 @@ The Kinect2Kit session API allows developers to start a new tracking session wit
         HTTP status code 200 or 400
 
 
-## C# Client
+## ClientAPI - "public static bool TryLoadSetup(string setupFilepath)"
+The client can specify the environment specification inside a configuration file in xml format, see [configuration](#docs/api/session/configuration). This function loads the configuration file into memory. The `Gesture Tracker` user interface allows the user to select the file through the default file explorer.
 
-The client can specify the environment specification inside a configuration file in xml format, see [configuration](#docs/api/session/configuration)
+
+    Args:
+
+        setupFilepath (str):
+            file path to the configuration file
+
+    Returns:
+
+        true if loaded correctly, false otherwise
+
+
+
+
+## ClientAPI - "public static async Task<Kinect2KitSimpleResponse> StartSessionAsync(string name)"
+
