@@ -1,13 +1,13 @@
 # [Kinect2Kit]()
-[![Build Status](https://travis-ci.org/cjw-charleswu/Recompute.svg?branch=master)][1]
+<!-- [![Build Status](https://travis-ci.org/cjw-charleswu/Recompute.svg?branch=master)][1] -->
 
-- [Github Repository](https://github.com/cjw-charleswu/Recompute/)
+- [Github Repository][Kinect2Kit_repo]
 
 [ditto:searchbar]
 
 
 ## Applications
-- Gesture Tracker
+- [Gesture Tracker][Gesture_Tracker_repo]
 
 
 ## Toolkit API
@@ -29,4 +29,5 @@
 <div style="margin-top: 30%"></div>
 Docs Powered by [ditto](https://chutsu.github.io/ditto)
 
-[1]: https://travis-ci.org/cjw-charleswu/Recompute
+[Kinect2Kit_repo]: https://github.com/cjw-charleswu/Kinect2Kit/
+[Gesture_Tracker_repo]: https://github.com/cjw-charleswu/GestureTracker
