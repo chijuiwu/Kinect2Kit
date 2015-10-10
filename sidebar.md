@@ -12,6 +12,7 @@
 
 ## Toolkit API
 - [session](#docs/api/session/session)
+	- [configuration](#docs/api/session/configuration)
     - [start](#docs/api/benchmark/analyzer)
     - [stop](#docs/api/benchmark/log_analyzer)
     - [add_kinect](#docs/api/benchmark/analyzer)

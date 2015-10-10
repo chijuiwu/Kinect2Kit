@@ -1,5 +1,5 @@
 # Kinect2Kit
-A RESTFul web service for calibrating and tracking with multiple Kinects. Used by [Gesture Tracker][1].
+A RESTFul web service for calibrating and tracking with multiple Kinects. It also contains a C# client API for developers to call the RESTful API. Used by [Gesture Tracker][1].
 
 ## Applications
 * [Gesture Tracker](https://github.com/cjw-charleswu/GestureTracker)
@@ -37,52 +37,56 @@ Create a virtual environment for the server.
     source venv/bin/activate
     (venv) pip install -r requirements.txt
 
-#### Client
-Use Visual Studio to build the following projects. You may build either the debug or release version. 
+#### Kinect2Kit API
+Build Kinect2kitAPI.dll with Visual Studio for the client and your application.
 
     $ Kinect2Kit/toolkit/client/csharp/Kinect2KitAPI
+
+#### Client
+Build the client with Visual Studio.
+
     $ Kinect2Kit/toolkit/client/csharp/Kinect2KitClient
 
 #### Example Application: Gesture Tracker
-Build the Kinect2KitAPI from the Kinect2Kit using Visual Studio.
-
-	$ Kinect2Kit/toolkit/client/csharp/Kinect2KitAPI
-
 Clone the Gesture Tracker application.
 
 	git clone git@github.com:cjw-charleswu/GestureTracker.git
 
-Build the the application using Visual Studio. You may need to fix the Kinect2KitAPI reference path.
+Build the application with Visual Studio.
 
 	$ GestureTracker/GestureTracker/GestureTracker
 
+Note: You may need to fix the Kinect2KitAPI reference path.
+
 
 ## Run
-The server is a Python Flask application. The clients are C# WPF applications.
+Run the server and the clients.
 
 #### Server
-The IP address and port number are optional.  By default, the server will run @ localhost:8000.
+The IP address and port number are optional. By default, the server will run at localhost:8000.
 
 	$ cd Kinect2Kit/
     $ source venv/bin/activate
     (venv) $ python run.py --host=[host] --port=[port]
 
 #### Client
-Start the Kinect2KitClient application.
+Start the Kinect2KitClient application on machines running the Kinects.
 
-    $ Kinect2Kit/toolkit/client/csharp/Kinect2KitClient/bin/AnyCPU/Debug/Body-Basics-WPF.exe
+    $ Kinect2Kit/toolkit/client/csharp/Kinect2KitClient/bin/Body-Basics-WPF.exe
 
 #### Example Application: Gesture Tracker
-Start the Gesture Tracker application. It uses a [configuration file][4].
+Start the Gesture Tracker application. Read about [configuration file][4] before starting a new session from the user interface.
 	
 	$ GestureTracker/GestureTracker/GestureTracker/bin/Debug/GestureTracker.exe
-	
+
 
 ## How does it work?
-The calibration procedure is based on 3D coordinate transformation proposed in [Wei et al's paper on Kinect Skeleton Coordinate Calibration for Remote Physical Training][5].
+The system calibrates multiple Kinects using [Wei et al.'s][5] technique on 3D coordinate transformation. The system then matches the same skeletons from different Kinects. The server provides RESTful APIs for getting the tracking result.
+
 
 ## Limitations
-The current approach works best when all Kinects are placed on the same level. In addition, it will fail when the Kinects are more than 90 degrees apart, for example, when they are opposite of each other.
+The current approach works best when all Kinects are placed parallel on the same level. The current system will fail when the Kinects are more than 90 degrees apart, for example, when they are opposite of each other.
+
 
 [1]: https://github.com/cjw-charleswu/GestureTracker
 [2]: https://github.com/cjw-charleswu/KinectMultiTrack/blob/master/Deliverables/Report/Final/thesis.pdf
