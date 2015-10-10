@@ -2,7 +2,6 @@
 The Kinect2Kit session API allows developers to start a new tracking session with an environment specification.
 
 
-
 ## POST
 
 
@@ -24,8 +23,9 @@ The Kinect2Kit session API allows developers to start a new tracking session wit
             "message": "Response"
         }
 
-        with either 200 or 400 status code
+        HTTP status code 200 or 400
 
 
 ## C# Client
 
+The client can specify the environment specification inside a configuration file in xml format, see [configuration](#docs/api/session/configuration)
