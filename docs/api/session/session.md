@@ -3,7 +3,7 @@ The Kinect2Kit session API allows developers to start a new tracking session wit
 
 
 
-POST
+## POST
 
 
     Parameters:
@@ -27,5 +27,5 @@ POST
         with either 200 or 400 status code
 
 
-The Kinect2Kit client API ..
+## C# Client
 
